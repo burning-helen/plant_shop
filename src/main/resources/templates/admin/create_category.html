@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Создание категории</title>
+</head>
+<body>
+<h1>Создать новую категорию</h1>
+
+<form th:action="@{/admin/categories}" method="post" th:object="${category}">
+    <label for="name">Название:</label>
+    <input type="text" id="name" th:field="*{name}" required />
+    <button type="submit">Создать</button>
+</form>
+
+<a th:href="@{/admin/categories}">Назад к списку категорий</a>
+
+</body>
+</html>

@@ -1,16 +1,13 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plant Shop — Главная</title>
-</head>
-<body>
 <header>
   <h1>Добро пожаловать в Plant Shop!</h1>
   <nav>
     <ul>
-      <li><a href="/products">Каталог</a></li>
+      <li th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
+        <a href="/admin/dashboard">Панель администратора</a>
+      </li>
+      <li th:unless="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
+        <a href="/products">Каталог</a>
+      </li>
       <li><a href="/cart">Корзина</a></li>
       <li><a href="/profile">Профиль</a></li>
       <li><a href="/logout">Выход</a></li>
@@ -19,12 +16,22 @@
 </header>
 
 <main>
-  <section>
+  <section th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
+    <h2>Управление магазином</h2>
+    <p>Вы можете добавлять товары, редактировать категории и управлять пользователями.</p>
+    <ul>
+      <li><a href="/admin/products">Управление товарами</a></li>
+      <li><a href="/admin/categories">Управление категориями</a></li>
+      <li><a href="/admin/users">Управление пользователями</a></li>
+    </ul>
+  </section>
+
+  <section th:unless="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
     <h2>Наши лучшие предложения</h2>
     <p>Выберите лучшие семена, саженцы деревьев и кустарников!</p>
   </section>
 
-  <section>
+  <section th:unless="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
     <h2>Категории</h2>
     <div class="categories">
       <a href="/products?category=trees">Деревья</a> |
@@ -33,9 +40,3 @@
     </div>
   </section>
 </main>
-
-<footer>
-  <p>&copy; 2025 Plant Shop. Все права защищены.</p>
-</footer>
-</body>
-</html>
