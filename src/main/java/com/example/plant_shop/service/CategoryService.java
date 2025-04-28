@@ -13,15 +13,32 @@ public class CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    public List<Category> findAllCategories() {
-        return categoryRepository.findAll();
+    // Получаем все категории без родителя (главные категории)
+    public List<Category> findAllMainCategories() {
+        return categoryRepository.findByParentIsNull();
     }
 
+    // Создание категории (с подкатегорией или без)
     public Category createCategory(Category category) {
         return categoryRepository.save(category);
     }
 
+    // Удаление категории
     public void deleteCategory(Long id) {
         categoryRepository.deleteById(id);
+    }
+
+
+    public List<Category> findSubcategories() {
+        return categoryRepository.findAllByParentIsNotNull();
+    }
+
+    public List<Category> findSubcategoriesByParentId(Long parentId) {
+        return categoryRepository.findByParentId(parentId);
+    }
+
+    public Category findById(Long id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
     }
 }

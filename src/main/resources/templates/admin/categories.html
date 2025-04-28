@@ -12,7 +12,6 @@
   </button>
 </a>
 
-
 <table>
   <thead>
   <tr>
@@ -21,12 +20,29 @@
   </tr>
   </thead>
   <tbody>
+  <!-- Выводим родительские категории -->
   <tr th:each="category : ${categories}">
-    <td th:text="${category.name}">Название категории</td>
+    <td th:text="${category.name}"></td>
     <td>
       <form th:action="@{'/admin/categories/' + ${category.id} + '/delete'}" method="post">
         <button type="submit">Удалить</button>
       </form>
+    </td>
+  </tr>
+
+  <!-- Выводим подкатегории для каждой категории -->
+  <tr th:each="category : ${categories}">
+    <td colspan="2">
+      <table>
+        <tr th:each="subCategory : ${category.subcategories}">
+          <td th:text="'&nbsp;&nbsp;' + ${subCategory.name}"></td>
+          <td>
+            <form th:action="@{'/admin/categories/' + ${subCategory.id} + '/delete'}" method="post">
+              <button type="submit">Удалить</button>
+            </form>
+          </td>
+        </tr>
+      </table>
     </td>
   </tr>
   </tbody>

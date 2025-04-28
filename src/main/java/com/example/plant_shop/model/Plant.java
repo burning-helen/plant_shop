@@ -1,9 +1,7 @@
 package com.example.plant_shop.model;
 
 import jakarta.persistence.*;
-
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "plants")
@@ -11,14 +9,15 @@ public class Plant {
     public Plant() {}
 
     public Plant(long id, String name, String description, double price, int stockQuantity,
-                 String imageUrl, String category, PlantType plantType) {
+                 String imageUrl, Category parentCategory, Category subcategory, PlantType plantType) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.price = price;
         this.stockQuantity = stockQuantity;
         this.imageUrl = imageUrl;
-        this.category = category;
+        this.parentCategory = parentCategory;
+        this.subcategory = subcategory;
         this.plantType = plantType;
     }
 
@@ -49,8 +48,13 @@ public class Plant {
     @Column(name = "imageUrl")
     private String imageUrl;
 
-    @Column(name = "category")
-    private String category;
+    @ManyToOne
+    @JoinColumn(name = "parent_category_id")   // исправил название столбца
+    private Category parentCategory;
+
+    @ManyToOne
+    @JoinColumn(name = "subcategory_id")
+    private Category subcategory;
 
     public enum PlantType {
         SEED,
@@ -59,67 +63,31 @@ public class Plant {
         BULB
     }
 
-    public long getId() {
-        return id;
-    }
+    // Геттеры и сеттеры
+    public long getId() { return id; }
+    public void setId(long id) { this.id = id; }
 
-    public void setId(long id) {
-        this.id = id;
-    }
+    public PlantType getPlantType() { return plantType; }
+    public void setPlantType(PlantType plantType) { this.plantType = plantType; }
 
-    public PlantType getPlantType() {
-        return plantType;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public void setPlantType(PlantType plantType) {
-        this.plantType = plantType;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public String getName() {
-        return name;
-    }
+    public double getPrice() { return price; }
+    public void setPrice(double price) { this.price = price; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public int getStockQuantity() { return stockQuantity; }
+    public void setStockQuantity(int stockQuantity) { this.stockQuantity = stockQuantity; }
 
-    public String getDescription() {
-        return description;
-    }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public Category getParentCategory() { return parentCategory; }
+    public void setParentCategory(Category parentCategory) { this.parentCategory = parentCategory; }
 
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public int getStockQuantity() {
-        return stockQuantity;
-    }
-
-    public void setStockQuantity(int stockQuantity) {
-        this.stockQuantity = stockQuantity;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
+    public Category getSubcategory() { return subcategory; }
+    public void setSubcategory(Category subcategory) { this.subcategory = subcategory; }
 }

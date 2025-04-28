@@ -19,7 +19,7 @@ public class CategoryController {
 
     @GetMapping
     public String listCategories(Model model) {
-        List<Category> categories = categoryService.findAllCategories();
+        List<Category> categories = categoryService.findAllMainCategories();
         model.addAttribute("categories", categories);
         return "categories"; // без кнопок добавления/удаления
     }

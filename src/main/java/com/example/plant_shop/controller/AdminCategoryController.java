@@ -1,5 +1,6 @@
 package com.example.plant_shop.controller;
 
+import com.example.plant_shop.model.Plant;
 import org.springframework.ui.Model;
 import com.example.plant_shop.model.Category;
 import com.example.plant_shop.service.CategoryService;
@@ -20,26 +21,32 @@ public class AdminCategoryController {
 
     @GetMapping
     public String listCategories(Model model) {
-        List<Category> categories = categoryService.findAllCategories();
+        // Получаем все главные категории (без родителя)
+        List<Category> categories = categoryService.findAllMainCategories();
         model.addAttribute("categories", categories);
-        return "admin/categories"; // c кнопками добавить/удалить
+        return "admin/categories"; // Шаблон для отображения списка категорий
     }
 
     @GetMapping("/new")
     public String showCreateForm(Model model) {
+        // Получаем все главные категории для выпадающего списка
+        List<Category> parentCategories = categoryService.findAllMainCategories();
         model.addAttribute("category", new Category());
-        return "admin/create_category";
+        model.addAttribute("parentCategories", parentCategories);
+        model.addAttribute("subcategories", categoryService.findSubcategories()); // список подкатегорий
+        model.addAttribute("plantTypes", List.of(Plant.PlantType.values()));// Передаем родительские категории для создания подкатегории
+        return "admin/create_category"; // Шаблон для создания категории
     }
 
     @PostMapping
     public String createCategory(@ModelAttribute Category category) {
         categoryService.createCategory(category);
-        return "redirect:/admin/categories";
+        return "redirect:/admin/categories"; // Перенаправление на список категорий
     }
 
     @PostMapping("/{id}/delete")
     public String deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);
-        return "redirect:/admin/categories";
+        return "redirect:/admin/categories"; // Перенаправление на список категорий
     }
 }

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Добавить новый товар</title>
+</head>
+<body>
+
+<h1>Добавить новый товар</h1>
+
+<form th:action="@{/admin/products}" th:object="${plant}" method="post" enctype="multipart/form-data">
+
+    <label for="name">Название:</label><br>
+    <input type="text" id="name" th:field="*{name}" required><br><br>
+
+    <label for="description">Описание:</label><br>
+    <textarea id="description" th:field="*{description}" required></textarea><br><br>
+
+    <label for="price">Цена:</label><br>
+    <input type="number" id="price" th:field="*{price}" step="0.01" required><br><br>
+
+    <label for="parentCategory">Главная категория:</label><br>
+    <select id="parentCategory" name="parentCategoryId" required onchange="loadSubcategories()">
+        <option value="" disabled selected>Выберите главную категорию</option>
+        <option th:each="parent : ${categories}"
+                th:value="${parent.id}"
+                th:text="${parent.name}">
+        </option>
+    </select>
+    <br><br>
+
+    <label for="subCategory">Подкатегория:</label><br>
+    <select id="subCategory" name="subCategoryId" required disabled>
+        <option value="" disabled selected>Сначала выберите главную категорию</option>
+    </select>
+    <br><br>
+
+    <script>
+        function loadSubcategories() {
+            var parentId = document.getElementById('parentCategory').value;
+            if (parentId) {
+                fetch('/admin/products/subcategories?parentId=' + parentId)
+                    .then(response => response.json())
+                    .then(subcategories => {
+                        var subCategorySelect = document.getElementById('subCategory');
+                        subCategorySelect.innerHTML = '';
+
+                        // Добавляем дефолтный вариант
+                        var defaultOption = document.createElement('option');
+                        defaultOption.value = '';
+                        defaultOption.disabled = true;
+                        defaultOption.selected = true;
+                        defaultOption.textContent = 'Выберите подкатегорию';
+                        subCategorySelect.appendChild(defaultOption);
+
+                        // Добавляем подкатегории
+                        subcategories.forEach(function(sub) {
+                            var option = document.createElement('option');
+                            option.value = sub.id;
+                            option.textContent = sub.name;
+                            subCategorySelect.appendChild(option);
+                        });
+
+                        subCategorySelect.disabled = false;
+                    });
+            } else {
+                document.getElementById('subCategory').innerHTML =
+                    '<option value="" disabled selected>Сначала выберите главную категорию</option>';
+                document.getElementById('subCategory').disabled = true;
+            }
+        }
+    </script>
+
+    <label for="plantType">Тип растения:</label><br>
+    <select id="plantType" th:field="*{plantType}" required>
+        <option th:each="type : ${plantTypes}"
+                th:value="${type}"
+                th:text="${type}"></option>
+    </select><br><br>
+
+    <label for="stockQuantity">Количество на складе:</label><br>
+    <input type="number" id="stockQuantity" th:field="*{stockQuantity}" required><br><br>
+
+    <label for="imageFile">Изображение:</label><br>
+    <input type="file" id="imageFile" name="imageFile" accept="image/png, image/jpeg"><br><br>
+
+    <button type="submit">Создать товар</button>
+</form>
+
+<br>
+<a th:href="@{/admin/products}">⬅️ Назад к списку товаров</a>
+
+</body>
+</html>

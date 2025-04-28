@@ -9,6 +9,15 @@
 <form th:action="@{/admin/categories}" method="post" th:object="${category}">
     <label for="name">Название:</label>
     <input type="text" id="name" th:field="*{name}" required />
+
+    <label for="parent">Родительская категория (если есть):</label>
+    <select id="parent" th:field="*{parent}">
+        <option value="" disabled selected>Выберите родительскую категорию</option>
+        <option th:each="parentCategory : ${parentCategories}"
+                th:value="${parentCategory.id}"
+                th:text="${parentCategory.name}"></option>
+    </select>
+
     <button type="submit">Создать</button>
 </form>
 
