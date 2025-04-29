@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Подтверждение удаления</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+</head>
+<body>
+<div class="container mt-5">
+    <h3 class="mb-4">Вы уверены, что хотите удалить пользователя?</h3>
+
+    <div class="card p-3">
+        <p><strong>Логин:</strong> <span th:text="${user.username}"></span></p>
+        <p><strong>Имя:</strong> <span th:text="${user.firstName}"></span></p>
+        <p><strong>Фамилия:</strong> <span th:text="${user.lastName}"></span></p>
+        <p><strong>Email:</strong> <span th:text="${user.email}"></span></p>
+        <p><strong>Роль:</strong> <span th:text="${user.role}"></span></p>
+    </div>
+
+    <form th:action="@{'/admin/users/delete/' + ${user.id}}" method="post" class="mt-4">
+        <button type="submit" class="btn btn-danger">Удалить</button>
+        <a th:href="@{/admin/users}" class="btn btn-secondary">Отмена</a>
+    </form>
+
+    <div th:if="${error}" class="alert alert-danger mt-3" th:text="${error}"></div>
+</div>
+</body>
+</html>
