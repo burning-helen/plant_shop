@@ -32,6 +32,9 @@
   </section>
 
   <section th:unless="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
+    <li class="nav-item">
+      <a class="nav-link" th:href="@{/catalog}">Каталог</a>
+    </li>
     <h2>Категории</h2>
     <div class="categories">
       <a href="/products?category=trees">Деревья</a> |
