@@ -12,7 +12,7 @@
 
     <label for="parent">Родительская категория (если есть):</label>
     <select id="parent" th:field="*{parent}">
-        <option value="" disabled selected>Выберите родительскую категорию</option>
+        <option value="" th:selected="${null}">Без родительской категории</option>
         <option th:each="parentCategory : ${parentCategories}"
                 th:value="${parentCategory.id}"
                 th:text="${parentCategory.name}"></option>

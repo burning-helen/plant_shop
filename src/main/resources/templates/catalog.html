@@ -3,10 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <title>Каталог растений</title>
+  <meta name="_csrf" th:content="${_csrf.token}" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
+<nav class="navbar navbar-light bg-light justify-content-between px-4">
+  <a class="navbar-brand" href="/">Магазин растений</a>
+  <a href="/cart" class="btn btn-outline-dark position-relative">
+    🛒 Корзина
+    <span id="cart-count" th:text="${cartCount}">0</span>
+
+  </a>
+
+</nav>
+
 <div class="container mt-4">
+
+  <!-- Добавлена ссылка на весь каталог -->
+  <div class="mb-3">
+    <a href="/catalog" class="btn btn-outline-primary">Посмотреть весь каталог</a>
+  </div>
 
   <h1 th:if="${categoryName != null}" th:text="'Категория: ' + ${categoryName}"></h1>
   <h1 th:if="${subcategoryName != null}" th:text="'Подкатегория: ' + ${subcategoryName}"></h1>
@@ -15,9 +31,30 @@
 
   <div class="row mb-3">
     <div class="col-md-6">
-      <form th:action="@{/catalog/search}" method="get">
+      <form th:action="@{/catalog}" method="get" class="d-flex gap-2">
+        <select name="categoryName" class="form-select">
+          <option value="">Все категории</option>
+          <option th:each="cat : ${categories}"
+                  th:value="${cat.name}"
+                  th:text="${cat.name}"
+                  th:selected="${cat.name == categoryName}"></option>
+        </select>
+
+        <select name="subcategoryName" class="form-select">
+          <option value="">Все подкатегории</option>
+          <option th:each="sub : ${subcategories}"
+                  th:value="${sub.name}"
+                  th:text="${sub.name}"
+                  th:selected="${sub.name == subcategoryName}"></option>
+        </select>
+
+      </form>
+
+    </div>
+    <div class="col-md-6">
+      <form th:action="@{/catalog}" method="get">
         <div class="input-group">
-          <input type="text" name="query" class="form-control" placeholder="Поиск растений...">
+          <input type="text" name="search" class="form-control" placeholder="Поиск растений..." th:value="${searchQuery}">
           <button class="btn btn-outline-secondary" type="submit">Найти</button>
         </div>
       </form>
@@ -31,14 +68,22 @@
              class="card-img-top"
              style="height: 200px; object-fit: cover;"
              alt="Изображение растения"
-             onerror="this.src='/uploads/default-plant.png'">        <div class="card-body">
+             onerror="this.src='/uploads/default-plant.png'">
+        <div class="card-body">
           <h5 class="card-title" th:text="${plant.name}"></h5>
           <p class="card-text" th:text="${plant.description}"></p>
         </div>
         <div class="card-footer">
           <div class="d-flex justify-content-between align-items-center">
             <span class="h5" th:text="${plant.price} + ' ₽'"></span>
-            <a th:href="@{/catalog/plant/{id}(id=${plant.id})}" class="btn btn-primary">Подробнее</a>
+             <div class="d-flex justify-content-between align-items-center">
+               <button class="btn btn-success add-to-cart-btn" type="button"
+                       th:data-plant-id="${plant.id}">
+                 В корзину
+               </button>
+
+               <a th:href="@{/catalog/plant/{id}(id=${plant.id})}" class="btn btn-primary">Подробнее</a>
+            </div>
           </div>
         </div>
       </div>
@@ -49,6 +94,96 @@
     Растения не найдены
   </div>
 </div>
+
+<script>
+  document.querySelectorAll('select[name="categoryName"], select[name="subcategoryName"]').forEach(select => {
+    select.addEventListener('change', function() {
+      this.form.submit();
+    });
+  });
+</script>
+
+<!-- Toast-уведомление -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+  <div id="cartToast" class="toast align-items-center text-bg-success border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body">
+        Товар добавлен в корзину!
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const buttons = document.querySelectorAll('.add-to-cart-btn');
+    const cartCountElement = document.getElementById('cart-count');
+
+    function updateCartCounter() {
+      fetch('/cart/count', {
+        credentials: 'same-origin'
+      })
+              .then(res => {
+                if (!res.ok) {
+                  throw new Error(`HTTP error! Status: ${res.status}`);
+                }
+                return res.text(); // Предполагаем, что сервер возвращает текст
+              })
+              .then(count => {
+                console.log("Ответ от /cart/count:", count); // Логирование для отладки
+                const numericCount = Number(count);
+                if (!isNaN(numericCount) && numericCount >= 0) {
+                  cartCountElement.innerText = String(numericCount);
+                } else {
+                  console.warn("Некорректное значение счетчика:", count);
+                  // Не сбрасываем счетчик в 0, оставляем текущее значение
+                }
+              })
+              .catch(err => {
+                console.error("Ошибка при получении количества товаров в корзине:", err);
+                // Оставляем текущее значение счетчика
+              });
+    }
+
+    buttons.forEach(button => {
+      button.addEventListener('click', function () {
+        const plantId = this.getAttribute('data-plant-id');
+
+        fetch('/cart/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').getAttribute('content')
+          },
+          body: 'plantId=' + encodeURIComponent(plantId)
+        })
+                .then(response => {
+                  if (response.ok) {
+                    showToast();
+                    updateCartCounter();
+
+                  } else {
+                    console.error("Ошибка при добавлении в корзину, статус:", response.status);
+                    alert('Ошибка при добавлении в корзину');
+                  }
+                })
+                .catch(err => {
+                  console.error("Ошибка при выполнении запроса /cart/add:", err);
+                  alert('Не удалось добавить товар в корзину');
+                });
+      });
+    });
+
+    function showToast() {
+      const toastEl = document.getElementById('cartToast');
+      const toast = new bootstrap.Toast(toastEl);
+      toast.show();
+    }
+  });
+</script>
+
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

@@ -2,93 +2,83 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Добавить новый товар</title>
+    <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="p-4">
 
-<h1>Добавить новый товар</h1>
+<h1 class="mb-4">Добавить новый товар</h1>
 
-<form th:action="@{/admin/products}" th:object="${plant}" method="post" enctype="multipart/form-data">
+<form th:action="@{/admin/products}" th:object="${plant}" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+    <div class="mb-3">
+        <label for="name" class="form-label">Название</label>
+        <input type="text" id="name" th:field="*{name}" class="form-control" required>
+    </div>
 
-    <label for="name">Название:</label><br>
-    <input type="text" id="name" th:field="*{name}" required><br><br>
+    <div class="mb-3">
+        <label for="description" class="form-label">Описание</label>
+        <textarea id="description" th:field="*{description}" class="form-control" rows="3" required></textarea>
+    </div>
 
-    <label for="description">Описание:</label><br>
-    <textarea id="description" th:field="*{description}" required></textarea><br><br>
+    <div class="mb-3">
+        <label for="price" class="form-label">Цена</label>
+        <input type="number" id="price" th:field="*{price}" step="0.01" class="form-control" required>
+    </div>
 
-    <label for="price">Цена:</label><br>
-    <input type="number" id="price" th:field="*{price}" step="0.01" required><br><br>
+    <div class="mb-3">
+        <label for="parentCategory" class="form-label">Главная категория</label>
+        <select id="parentCategory" name="parentCategoryId" class="form-select" required>
+            <option value="" disabled selected>Выберите главную категорию</option>
+            <option th:each="parent : ${categories}"
+                    th:value="${parent.id}"
+                    th:text="${parent.name}">
+            </option>
+        </select>
+    </div>
 
-    <label for="parentCategory">Главная категория:</label><br>
-    <select id="parentCategory" name="parentCategoryId" required onchange="loadSubcategories()">
-        <option value="" disabled selected>Выберите главную категорию</option>
-        <option th:each="parent : ${categories}"
-                th:value="${parent.id}"
-                th:text="${parent.name}">
-        </option>
-    </select>
-    <br><br>
+    <div class="mb-3">
+        <label for="subCategory" class="form-label">Подкатегория</label>
+        <select id="subCategory" name="subCategoryId" class="form-select" required>
+            <option value="" disabled selected>Выберите подкатегорию</option>
+            <th:block th:each="parent : ${categories}">
+                <th:block th:if="${#maps.containsKey(subcategoriesMap, parent.id)}">
+                    <th:block th:each="sub : ${subcategoriesMap.get(parent.id)}">
+                        <option th:value="${sub.id}" th:text="${parent.name + ' → ' + sub.name}"></option>
+                    </th:block>
+                </th:block>
+            </th:block>
+        </select>
+    </div>
 
-    <label for="subCategory">Подкатегория:</label><br>
-    <select id="subCategory" name="subCategoryId" required disabled>
-        <option value="" disabled selected>Сначала выберите главную категорию</option>
-    </select>
-    <br><br>
+    <div class="mb-3">
+        <label for="plantType" class="form-label">Тип растения</label>
+        <select id="plantType" th:field="*{plantType}" class="form-select" required>
+            <option value="" disabled selected>Выберите тип</option>
+            <option th:each="type : ${plantTypes}"
+                    th:value="${type}"
+                    th:text="${type}"></option>
+        </select>
+    </div>
 
-    <script>
-        function loadSubcategories() {
-            var parentId = document.getElementById('parentCategory').value;
-            if (parentId) {
-                fetch('/admin/products/subcategories?parentId=' + parentId)
-                    .then(response => response.json())
-                    .then(subcategories => {
-                        var subCategorySelect = document.getElementById('subCategory');
-                        subCategorySelect.innerHTML = '';
+    <div class="mb-3">
+        <label for="stockQuantity" class="form-label">Количество на складе</label>
+        <input type="number" id="stockQuantity" th:field="*{stockQuantity}" class="form-control" required>
+    </div>
 
-                        // Добавляем дефолтный вариант
-                        var defaultOption = document.createElement('option');
-                        defaultOption.value = '';
-                        defaultOption.disabled = true;
-                        defaultOption.selected = true;
-                        defaultOption.textContent = 'Выберите подкатегорию';
-                        subCategorySelect.appendChild(defaultOption);
+    <div class="mb-3">
+        <label for="imageFile" class="form-label">Изображение</label>
+        <input type="file" id="imageFile" name="imageFile" class="form-control" accept="image/png, image/jpeg">
+    </div>
 
-                        // Добавляем подкатегории
-                        subcategories.forEach(function(sub) {
-                            var option = document.createElement('option');
-                            option.value = sub.id;
-                            option.textContent = sub.name;
-                            subCategorySelect.appendChild(option);
-                        });
-
-                        subCategorySelect.disabled = false;
-                    });
-            } else {
-                document.getElementById('subCategory').innerHTML =
-                    '<option value="" disabled selected>Сначала выберите главную категорию</option>';
-                document.getElementById('subCategory').disabled = true;
-            }
-        }
-    </script>
-
-    <label for="plantType">Тип растения:</label><br>
-    <select id="plantType" th:field="*{plantType}" required>
-        <option th:each="type : ${plantTypes}"
-                th:value="${type}"
-                th:text="${type}"></option>
-    </select><br><br>
-
-    <label for="stockQuantity">Количество на складе:</label><br>
-    <input type="number" id="stockQuantity" th:field="*{stockQuantity}" required><br><br>
-
-    <label for="imageFile">Изображение:</label><br>
-    <input type="file" id="imageFile" name="imageFile" accept="image/png, image/jpeg"><br><br>
-
-    <button type="submit">Создать товар</button>
+    <button type="submit" class="btn btn-primary">Создать товар</button>
 </form>
 
-<br>
-<a th:href="@{/admin/products}">⬅️ Назад к списку товаров</a>
-<a th:href="@{/home}">⬅️ На главную страницу</a>
+<hr class="my-4">
 
+<a th:href="@{/admin/products}" class="btn btn-outline-secondary me-2">⬅️ Назад к списку товаров</a>
+<a th:href="@{/home}" class="btn btn-outline-secondary">🏠 На главную</a>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

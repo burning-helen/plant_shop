@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Корзина</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .quantity-input {
+            width: 60px;
+            text-align: center;
+        }
+        .cart-actions {
+            white-space: nowrap;
+        }
+        .quantity-btn {
+            width: 30px;
+            padding: 0.25rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container py-5">
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <h2 class="mb-0"><i class="bi bi-cart3 me-2"></i>Ваша корзина</h2>
+        </div>
+
+        <div class="card-body">
+            <!-- Сообщение о пустой корзине -->
+            <div th:if="${cart.items.size() == 0}" class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>Ваша корзина пуста
+                <a th:href="@{/catalog}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Продолжить покупки
+                </a>
+
+            </div>
+
+            <!-- Таблица товаров -->
+            <table class="table" th:if="${cart.items.size() > 0}">
+                <thead class="table-light">
+                <tr>
+                    <th>Товар</th>
+                    <th>Цена</th>
+                    <th>Количество</th>
+                    <th>Сумма</th>
+                    <th>Действия</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${cart.items}">
+                    <td>
+                        <a th:href="@{/catalog/plant/{id}(id=${item.plant.id})}"
+                           th:text="${item.plant.name}" class="text-decoration-none">
+                        </a>
+                    </td>
+                    <td th:text="${#numbers.formatDecimal(item.price, 1, 2)} + ' ₽'"></td>
+                    <td>
+                        <form th:action="@{/cart/update}" method="post" class="d-flex gap-1 align-items-center">
+                            <input type="hidden" name="itemId" th:value="${item.id}"/>
+
+                            <!-- Кнопка уменьшения -->
+                            <button type="button" class="btn btn-sm btn-outline-secondary quantity-btn quantity-decrease"
+                                    th:disabled="${item.quantity <= 1}">
+                                -
+                            </button>
+
+                            <!-- Поле количества -->
+                            <input type="number" name="quantity"
+                                   th:value="${item.quantity}"
+                                   min="1"
+                                   th:max="${item.plant.stockQuantity}"
+                                   class="form-control quantity-input">
+
+                            <!-- Кнопка увеличения -->
+                            <button type="button" class="btn btn-sm btn-outline-secondary quantity-btn quantity-increase"
+                                    th:disabled="${item.quantity >= item.plant.stockQuantity}">
+                                +
+                            </button>
+
+                            <!-- Скрытая кнопка submit -->
+                            <button type="submit" class="d-none"></button>
+                        </form>
+                    </td>
+                    <td th:text="${#numbers.formatDecimal(item.quantity * item.price, 1, 2)} + ' ₽'"></td>
+                    <td class="cart-actions">
+                        <form th:action="@{/cart/remove}" method="post" class="d-inline">
+                            <input type="hidden" name="itemId" th:value="${item.id}"/>
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i> Удалить
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <!-- Итого и кнопки -->
+            <div th:if="${cart.items.size() > 0}" class="mt-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        Итого: <span th:text="${#numbers.formatDecimal(cart.totalAmount, 1, 2)} + ' ₽'"></span>
+                    </h4>
+                    <div class="d-flex gap-2">
+                        <a th:href="@{/catalog}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Продолжить покупки
+                        </a>
+                        <a href="#" class="btn btn-success">
+                            <i class="bi bi-credit-card me-1"></i> Оформить заказ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Обработчики для кнопок +/-
+        document.querySelectorAll('.quantity-decrease').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const form = this.closest('form');
+                const input = form.querySelector('input[name="quantity"]');
+                if (parseInt(input.value) > parseInt(input.min)) {
+                    input.value = parseInt(input.value) - 1;
+                    form.submit();
+                }
+            });
+        });
+
+        document.querySelectorAll('.quantity-increase').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const form = this.closest('form');
+                const input = form.querySelector('input[name="quantity"]');
+                if (parseInt(input.value) < parseInt(input.max)) {
+                    input.value = parseInt(input.value) + 1;
+                    form.submit();
+                }
+            });
+        });
+
+        // Авто-отправка формы при ручном изменении количества
+        document.querySelectorAll('.quantity-input').forEach(input => {
+            input.addEventListener('change', function() {
+                this.closest('form').submit();
+            });
+        });
+    });
+</script>
+</body>
+</html>

@@ -2,7 +2,11 @@ package com.example.plant_shop.service;
 
 import com.example.plant_shop.model.User;
 import com.example.plant_shop.repository.UserRepository;
+import com.example.plant_shop.security.CustomUserDetails;
 import jakarta.transaction.Transactional;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +21,24 @@ public class UserService {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
+
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null &&
+                authentication.isAuthenticated() &&
+                !(authentication instanceof AnonymousAuthenticationToken)) {
+
+            Object principal = authentication.getPrincipal();
+
+            if (principal instanceof CustomUserDetails) {
+                return ((CustomUserDetails) principal).getUser();
+            }
+        }
+
+        return null;
+    }
+
 
     public boolean registerUser(User user) {
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {

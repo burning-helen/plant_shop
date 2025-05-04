@@ -17,7 +17,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin/products")
@@ -41,11 +43,17 @@ public class AdminPlantController {
     @GetMapping("/new")
     public String showCreateForm(Model model) {
         List<Category> parentCategories = categoryService.findAllMainCategories();
+        Map<Long, List<Category>> subMap = new HashMap<>();
+
+        for (Category parent : parentCategories) {
+            subMap.put(parent.getId(), categoryService.findSubcategoriesByParentId(parent.getId()));
+        }
 
         model.addAttribute("plant", new Plant());
         model.addAttribute("plantTypes", Arrays.asList(Plant.PlantType.values()));
         model.addAttribute("categories", parentCategories);
-        // Убрали общий список подкатегорий, будем загружать их динамически
+        model.addAttribute("subcategoriesMap", subMap);
+
         return "admin/create_product";
     }
 
@@ -55,7 +63,6 @@ public class AdminPlantController {
                               @RequestParam("subCategoryId") Long subCategoryId,
                               @RequestParam("imageFile") MultipartFile imageFile) throws IOException {
 
-        // Устанавливаем категории
         Category parentCategory = categoryService.findById(parentCategoryId);
         Category subCategory = categoryService.findById(subCategoryId);
 

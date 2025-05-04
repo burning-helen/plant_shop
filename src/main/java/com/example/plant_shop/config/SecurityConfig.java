@@ -1,5 +1,9 @@
 package com.example.plant_shop.config;
 
+import com.example.plant_shop.security.CustomAuthenticationSuccessHandler;
+import com.example.plant_shop.service.CartService;
+import com.example.plant_shop.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -9,21 +13,27 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
-
 public class SecurityConfig {
+
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/home", "/login", "/register").permitAll()
+                        .requestMatchers("/cart/**").authenticated()
+                        .requestMatchers("/catalog/**", "/uploads/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
+                        .successHandler(customAuthenticationSuccessHandler)
                         .defaultSuccessUrl("/home", true)
                         .permitAll()
                 )
@@ -40,5 +50,11 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler(UserService userService,
+                                                                                 CartService cartService) {
+        return new CustomAuthenticationSuccessHandler(userService, cartService);
     }
 }

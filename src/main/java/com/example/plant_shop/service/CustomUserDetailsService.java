@@ -2,6 +2,7 @@ package com.example.plant_shop.service;
 
 import com.example.plant_shop.model.User;
 import com.example.plant_shop.repository.UserRepository;
+import com.example.plant_shop.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,11 +23,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(),
+        return new CustomUserDetails(
+                user,
                 user.getRole().stream()
-                        .map(role -> new SimpleGrantedAuthority(role))
+                        .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList())
         );
     }

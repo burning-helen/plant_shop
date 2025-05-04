@@ -20,11 +20,11 @@ public class Category {
     @OneToMany(mappedBy = "parent")
     private List<Category> subcategories; // Список подкатегорий
 
-    @OneToMany(mappedBy = "parentCategory")  // исправил mappedBy на parentCategory
-    private List<Plant> plantsAsParentCategory; // Растения, где эта категория — родитель
+    @OneToMany(mappedBy = "parentCategory")
+    private List<Plant> plantsAsParentCategory;
 
-    @OneToMany(mappedBy = "subcategory")      // ещё одно отношение
-    private List<Plant> plantsAsSubcategory;   // Растения, где эта категория — подкатегория
+    @OneToMany(mappedBy = "subcategory")
+    private List<Plant> plantsAsSubcategory;
 
     public Category() {}
 

@@ -5,8 +5,8 @@
       <li th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
         <a href="/admin/dashboard">Панель администратора</a>
       </li>
-      <li th:unless="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
-        <a href="/products">Каталог</a>
+      <li class="nav-item">
+        <a class="nav-link" th:href="@{/catalog}">Каталог</a>
       </li>
       <li><a href="/cart">Корзина</a></li>
       <li><a href="/profile">Профиль</a></li>

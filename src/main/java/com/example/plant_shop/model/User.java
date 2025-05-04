@@ -26,6 +26,7 @@ public class User {
         this.role = role;
         this.deliveryAddress = "Адрес по умолчанию";
         this.phoneNumber = phoneNumber;
+
     }
 
 

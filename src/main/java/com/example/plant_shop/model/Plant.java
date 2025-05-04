@@ -19,6 +19,7 @@ public class Plant {
         this.parentCategory = parentCategory;
         this.subcategory = subcategory;
         this.plantType = plantType;
+
     }
 
     @Id
@@ -49,7 +50,7 @@ public class Plant {
     private String imageUrl;
 
     @ManyToOne
-    @JoinColumn(name = "parent_category_id")   // исправил название столбца
+    @JoinColumn(name = "parent_category_id")
     private Category parentCategory;
 
     @ManyToOne
@@ -64,7 +65,7 @@ public class Plant {
     }
 
     // Геттеры и сеттеры
-    public long getId() { return id; }
+    public Long getId() { return id; }
     public void setId(long id) { this.id = id; }
 
     public PlantType getPlantType() { return plantType; }
@@ -90,4 +91,6 @@ public class Plant {
 
     public Category getSubcategory() { return subcategory; }
     public void setSubcategory(Category subcategory) { this.subcategory = subcategory; }
+
+
 }

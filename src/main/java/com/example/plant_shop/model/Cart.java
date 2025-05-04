@@ -6,11 +6,11 @@ import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
-@Table(name = "Carts")
+@Table(name = "carts")
 public class Cart {
     public Cart() {}
 
-    public Cart(long id, User user, List<CartItem> items, double totalAmount) {
+    public Cart(Long id, User user, List<CartItem> items, double totalAmount) {
         this.id = id;
         this.user = user;
         this.items = items;
@@ -21,7 +21,7 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "cart_seq", sequenceName = "carts_sequence", allocationSize = 1)
     @Column(name= "id")
-    private long id;
+    private Long id;
 
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
@@ -34,11 +34,11 @@ public class Cart {
     @Column(name = "totalAmount")
     private double totalAmount;
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
