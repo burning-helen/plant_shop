@@ -6,10 +6,12 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "cart_items")
 public class CartItem {
-    public CartItem() {}
+    public CartItem() {
+    }
 
-    public CartItem(long id, Cart cart, Plant plant, Integer quantity, double price) {
+    public CartItem(long id, User user, Cart cart, Plant plant, Integer quantity, double price) {
         this.id = id;
+        this.user = user;
         this.cart = cart;
         this.plant = plant;
         this.quantity = quantity;
@@ -20,6 +22,10 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_id")
@@ -72,5 +78,13 @@ public class CartItem {
 
     public void setPrice(double price) {
         this.price = price;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

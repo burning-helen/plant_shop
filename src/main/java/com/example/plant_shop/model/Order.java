@@ -4,16 +4,18 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Entity
 @Table(name = "orders")
 public class Order {
     public Order() {}
 
-    public Order(long id, User user, LocalDateTime orderDate, String deliveryAddress, String status, double totalAmount) {
+    public Order(long id, User user, String paymentMethod, LocalDateTime orderDate, String deliveryAddress, String status, double totalAmount) {
         this.id = id;
         this.user = user;
         this.orderDate = orderDate;
+        this.paymentMethod = paymentMethod;
         this.deliveryAddress = deliveryAddress;
         this.status = status;
         this.totalAmount = totalAmount;
@@ -25,7 +27,7 @@ public class Order {
     @Column(name= "id")
     private long id;
 
-    @OneToMany(mappedBy = "order")
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderItem> items;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -37,6 +39,9 @@ public class Order {
 
     @Column(name = "deliveryAddress")
     private String deliveryAddress;
+
+    @Column(name = "paymentMethod")
+    private String paymentMethod;
 
     @Column(name = "status")
     private String status;
@@ -91,5 +96,21 @@ public class Order {
 
     public void setTotalAmount(double totalAmount) {
         this.totalAmount = totalAmount;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public List<OrderItem> getItems() {
+        return items;
+    }
+
+    public void setItems(List<OrderItem> items) {
+        this.items = items;
     }
 }

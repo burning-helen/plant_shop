@@ -3,13 +3,12 @@
   <nav>
     <ul>
       <li th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
-        <a href="/admin/dashboard">Панель администратора</a>
+        <a href="/admin_orders">Панель администратора</a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" th:href="@{/catalog}">Каталог</a>
-      </li>
+      <li><a th:href="@{/catalog}">Каталог</a></li>
       <li><a href="/cart">Корзина</a></li>
       <li><a href="/profile">Профиль</a></li>
+      <li><a href="/user_orders">История заказов</a></li>
       <li><a href="/logout">Выход</a></li>
     </ul>
   </nav>
@@ -29,12 +28,7 @@
   <section th:unless="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
     <h2>Наши лучшие предложения</h2>
     <p>Выберите лучшие семена, саженцы деревьев и кустарников!</p>
-  </section>
 
-  <section th:unless="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
-    <li class="nav-item">
-      <a class="nav-link" th:href="@{/catalog}">Каталог</a>
-    </li>
     <h2>Категории</h2>
     <div class="categories">
       <a href="/products?category=trees">Деревья</a> |

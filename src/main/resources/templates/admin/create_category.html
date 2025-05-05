@@ -4,6 +4,13 @@
     <title>Создание категории</title>
 </head>
 <body>
+<nav class="navbar navbar-light bg-light justify-content-between px-4">
+    <a class="navbar-brand" href="/">Магазин растений</a>
+    <a href="/cart" class="btn btn-outline-dark position-relative">
+        <i class="bi bi-cart"></i> Корзина
+        <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" th:text="${cartCount}">0</span>
+    </a>
+</nav>
 <h1>Создать новую категорию</h1>
 
 <form th:action="@{/admin/categories}" method="post" th:object="${category}">

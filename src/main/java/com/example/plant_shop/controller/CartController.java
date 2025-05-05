@@ -66,7 +66,6 @@ public class CartController {
     public String getCartItemCount(HttpSession session) {
         Cart cart = cartService.getCurrentCart(session, userService.getCurrentUser());
         int count = cart.getItems().stream().mapToInt(CartItem::getQuantity).sum();
-        System.out.println(count);
         return String.valueOf(count);
     }
 

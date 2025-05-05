@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -52,14 +53,16 @@ public class PlantCatalogController {
         if (search != null && !search.isEmpty()) {
             plants = plantRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(search);
             model.addAttribute("searchQuery", search);
-        } else if (categoryName != null && !categoryName.isEmpty()) {
-            if (subcategoryName != null && !subcategoryName.isEmpty()) {
-                plants = plantRepository.findByParentCategory_NameAndSubcategory_Name(categoryName, subcategoryName);
-                model.addAttribute("subcategoryName", subcategoryName);
-            } else {
-                plants = plantRepository.findByParentCategory_Name(categoryName);
-            }
+        } else if (categoryName != null && !categoryName.isEmpty() && subcategoryName != null && !subcategoryName.isEmpty()) {
+            plants = plantRepository.findByParentCategory_NameAndSubcategory_Name(categoryName, subcategoryName);
             model.addAttribute("categoryName", categoryName);
+            model.addAttribute("subcategoryName", subcategoryName);
+        } else if (categoryName != null && !categoryName.isEmpty()) {
+            plants = plantRepository.findByParentCategory_Name(categoryName);
+            model.addAttribute("categoryName", categoryName);
+        } else if (subcategoryName != null && !subcategoryName.isEmpty()) {
+            plants = plantRepository.findBySubcategory_Name(subcategoryName);
+            model.addAttribute("subcategoryName", subcategoryName);
         } else {
             plants = plantRepository.findAll();
         }

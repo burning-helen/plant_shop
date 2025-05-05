@@ -10,9 +10,11 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -78,7 +80,9 @@ public class CartService {
                 newItem.setQuantity(sessionItem.getQuantity());
                 newItem.setPrice(sessionItem.getPrice());
                 newItem.setCart(dbCart);
+                newItem.setUser(userService.getCurrentUser());
                 dbCart.getItems().add(newItem);
+
             }
         }
 
@@ -106,6 +110,7 @@ public class CartService {
             newItem.setQuantity(quantity);
             newItem.setPrice(plant.getPrice());
             newItem.setCart(cart);
+            newItem.setUser(userService.getCurrentUser());
             cart.getItems().add(newItem);
         }
 
@@ -198,8 +203,25 @@ public class CartService {
             session.setAttribute("cart", cart);
         }
     }
+    @Transactional
+    public void clearCart(HttpSession session) {
+        User user = userService.getCurrentUser();
+        Cart cart = getCurrentCart(session, user);
 
+        if (cart != null) {
+            // 1. Очищаем коллекцию items
+            List<CartItem> items = new ArrayList<>(cart.getItems());
+            cart.getItems().clear();
 
+            // 2. Удаляем все CartItem
+            cartItemRepository.deleteAll(items);
 
+            // 3. Удаляем саму корзину
+            cartRepository.delete(cart);
 
+            // 4. Очищаем сессию
+            session.removeAttribute("cart");
+        }
+    }
 }
+

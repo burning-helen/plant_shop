@@ -20,6 +20,9 @@
     </style>
 </head>
 <body class="bg-light">
+<nav class="navbar navbar-light bg-light justify-content-between px-4">
+    <a class="navbar-brand" href="/">Магазин растений</a>
+</nav>
 <div class="container py-5">
     <div class="card shadow">
         <div class="card-header bg-white">
@@ -27,7 +30,6 @@
         </div>
 
         <div class="card-body">
-            <!-- Сообщение о пустой корзине -->
             <div th:if="${cart.items.size() == 0}" class="alert alert-info">
                 <i class="bi bi-info-circle me-2"></i>Ваша корзина пуста
                 <a th:href="@{/catalog}" class="btn btn-outline-secondary">
@@ -105,9 +107,10 @@
                         <a th:href="@{/catalog}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left me-1"></i> Продолжить покупки
                         </a>
-                        <a href="#" class="btn btn-success">
+                        <a th:href="@{/checkout}" class="btn btn-success">
                             <i class="bi bi-credit-card me-1"></i> Оформить заказ
                         </a>
+
                     </div>
                 </div>
             </div>

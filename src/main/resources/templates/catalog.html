@@ -5,14 +5,20 @@
   <title>Каталог растений</title>
   <meta name="_csrf" th:content="${_csrf.token}" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    #cart-count {
+      font-size: 0.7rem;
+    }
+  </style>
+
 </head>
 <body>
 <nav class="navbar navbar-light bg-light justify-content-between px-4">
   <a class="navbar-brand" href="/">Магазин растений</a>
   <a href="/cart" class="btn btn-outline-dark position-relative">
-    🛒 Корзина
-    <span id="cart-count" th:text="${cartCount}">0</span>
-
+    <i class="bi bi-cart"></i> Корзина
+    <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" th:text="${cartCount}">0</span>
   </a>
 
 </nav>
