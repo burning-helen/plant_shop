@@ -57,6 +57,8 @@ public class Plant {
     @JoinColumn(name = "subcategory_id")
     private Category subcategory;
 
+
+
     public enum PlantType {
         SEED,
         SEEDLING,

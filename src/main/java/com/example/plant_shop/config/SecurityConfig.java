@@ -26,20 +26,18 @@ public class SecurityConfig {
                                                    CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/home", "/login", "/register").permitAll()
-                        .requestMatchers("/cart/**").authenticated()
-                        .requestMatchers("/catalog/**", "/uploads/**").permitAll()
+                        .requestMatchers("/", "/catalog/**", "/login", "/register", "/uploads/**", "/cart/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
                         .successHandler(customAuthenticationSuccessHandler)
-                        .defaultSuccessUrl("/home", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/home")
+                        .logoutSuccessUrl("/catalog")
                         .invalidateHttpSession(true)
                         .clearAuthentication(true)
                         .permitAll()

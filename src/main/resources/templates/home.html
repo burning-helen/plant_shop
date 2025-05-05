@@ -1,39 +1,201 @@
-<header>
-  <h1>Добро пожаловать в Plant Shop!</h1>
-  <nav>
-    <ul>
-      <li th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
-        <a href="/admin_orders">Панель администратора</a>
-      </li>
-      <li><a th:href="@{/catalog}">Каталог</a></li>
-      <li><a href="/cart">Корзина</a></li>
-      <li><a href="/profile">Профиль</a></li>
-      <li><a href="/user_orders">История заказов</a></li>
-      <li><a href="/logout">Выход</a></li>
-    </ul>
-  </nav>
-</header>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plant Shop - Магазин растений</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    :root {
+      --primary-color: #2e7d32;
+      --secondary-color: #81c784;
+      --light-bg: #f8f9fa;
+      --dark-text: #212529;
+    }
 
-<main>
-  <section th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
-    <h2>Управление магазином</h2>
-    <p>Вы можете добавлять товары, редактировать категории и управлять пользователями.</p>
-    <ul>
-      <li><a href="/admin/products">Управление товарами</a></li>
-      <li><a href="/admin/categories">Управление категориями</a></li>
-      <li><a href="/admin/users">Управление пользователями</a></li>
-    </ul>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--light-bg);
+      color: var(--dark-text);
+    }
+
+    .navbar {
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      background-color: white !important;
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      color: var(--primary-color) !important;
+      font-size: 1.5rem;
+    }
+
+    .welcome-banner {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 1rem;
+      margin-bottom: 2rem;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .welcome-text {
+      font-size: 1.2rem;
+      margin: 0;
+    }
+
+    .username {
+      font-weight: 600;
+      color: var(--secondary-color);
+    }
+
+    main {
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    section {
+      background-color: white;
+      border-radius: 8px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    h1, h2 {
+      color: var(--primary-color);
+    }
+
+    .btn-outline-primary {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    .btn-outline-primary:hover {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .admin-links {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .admin-links a {
+      background-color: var(--secondary-color);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+
+    .admin-links a:hover {
+      background-color: var(--primary-color);
+      transform: translateY(-2px);
+    }
+
+    .featured-section {
+      text-align: center;
+      padding: 3rem 2rem;
+    }
+
+    .featured-section a {
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+<!-- Навигационная панель -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light px-4 py-3">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/">
+      <i class="bi bi-flower1 me-2"></i>Магазин растений
+    </a>
+
+    <div class="d-flex align-items-center">
+      <!-- Кнопка корзины -->
+      <a href="/cart" class="btn btn-outline-dark position-relative me-3">
+        <i class="bi bi-cart"></i> Корзина
+        <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" th:text="${cartCount}">0</span>
+      </a>
+
+      <!-- Кнопка профиля -->
+      <a href="/home" class="btn btn-outline-dark me-3">
+        <i class="bi bi-person"></i>
+      </a>
+
+      <!-- Кнопка выхода -->
+      <a th:if="${#authentication.principal != 'anonymousUser'}"
+         href="/logout"
+         class="btn btn-outline-danger"
+         title="Выйти">
+        <i class="bi bi-box-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- Приветственный баннер -->
+<div class="welcome-banner text-center" th:if="${#authentication.principal != 'anonymousUser'}">
+  <p class="welcome-text">
+    Добро пожаловать, <span class="username" th:text="${#authentication.principal.username}">Пользователь</span>!
+  </p>
+</div>
+
+<main class="container mt-4">
+  <!-- Админ-панель (только для админов) -->
+  <section class="admin-panel" th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
+    <h2><i class="bi bi-speedometer2 me-2"></i>Панель администратора</h2>
+    <p class="mb-4">Вы можете добавлять товары, редактировать категории и управлять пользователями.</p>
+
+    <div class="admin-links">
+      <a href="/admin/statistics"><i class="bi bi-graph-up me-1"></i> Статистика</a>
+      <a href="/admin/products"><i class="bi bi-shop me-1"></i> Товары</a>
+      <a href="/admin/categories"><i class="bi bi-tags me-1"></i> Категории</a>
+      <a href="/admin/users"><i class="bi bi-people me-1"></i> Пользователи</a>
+      <a href="/admin_orders"><i class="bi bi-list-check me-1"></i> Заказы</a>
+      <a href="/profile">
+        <i class="bi bi-person-circle me-2"></i>Мой профиль
+      </a>
+    </div>
   </section>
 
-  <section th:unless="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
-    <h2>Наши лучшие предложения</h2>
-    <p>Выберите лучшие семена, саженцы деревьев и кустарников!</p>
 
-    <h2>Категории</h2>
-    <div class="categories">
-      <a href="/products?category=trees">Деревья</a> |
-      <a href="/products?category=bushes">Кустарники</a> |
-      <a href="/products?category=seeds">Семена</a>
+  <section class="featured-section" th:unless="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
+    <h2><i class="bi bi-stars me-2"></i>Наши лучшие предложения</h2>
+    <p class="lead">Выберите лучшие семена, саженцы деревьев и кустарников!</p>
+    <a href="/catalog" class="btn btn-primary btn-lg">
+      <i class="bi bi-arrow-right-circle me-2"></i>Перейти в каталог
+    </a>
+  </section>
+
+  <!-- Дополнительные ссылки для пользователей -->
+  <section class="user-links" th:unless="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <a href="/user_orders" class="btn btn-outline-primary w-100 py-3">
+          <i class="bi bi-receipt me-2"></i>История заказов
+        </a>
+      </div>
+      <div class="col-md-4 mb-3">
+        <a href="/profile" class="btn btn-outline-primary w-100 py-3">
+          <i class="bi bi-person-circle me-2"></i>Мой профиль
+        </a>
+      </div>
+      <div class="col-md-4 mb-3">
+        <a href="/cart" class="btn btn-outline-primary w-100 py-3">
+          <i class="bi bi-cart3 me-2"></i>Корзина
+        </a>
+      </div>
     </div>
   </section>
 </main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -2,102 +2,249 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="_csrf" th:content="${_csrf.token}">
-  <title th:text="${plant.name}"></title>
+  <title th:text="${plant.name + ' | Магазин растений'}"></title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
   <style>
+    :root {
+      --primary-color: #2e7d32;
+      --secondary-color: #81c784;
+      --light-bg: #f8f9fa;
+      --dark-text: #212529;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--light-bg);
+    }
+
+    .navbar {
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      background-color: white !important;
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      color: var(--primary-color) !important;
+      font-size: 1.5rem;
+    }
+
+    .plant-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      background-color: white;
+      border-radius: 10px;
+      padding: 2rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .plant-header {
+      color: var(--primary-color);
+      margin-bottom: 1.5rem;
+    }
+
+    .plant-image {
+      max-height: 500px;
+      width: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+      background-color: #f8f9fa;
+      padding: 1rem;
+    }
+
+    .plant-type {
+      color: #6c757d;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    .plant-price {
+      color: var(--primary-color);
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 1.5rem 0;
+    }
+
+    .plant-description {
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    .stock-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .in-stock {
+      color: var(--primary-color);
+    }
+
+    .out-of-stock {
+      color: #dc3545;
+    }
+
     .quantity-control {
       display: flex;
       align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
       max-width: 200px;
     }
+
     .quantity-btn {
       width: 40px;
-      padding: 0.375rem;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
     }
+
     .quantity-input {
-      width: 60px;
+      width: 70px;
       text-align: center;
-      margin: 0 5px;
+      padding: 0.5rem;
     }
-    .plant-image {
-      max-height: 500px;
-      object-fit: contain;
+
+    .add-to-cart-btn {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      padding: 0.75rem 1.5rem;
+      font-weight: 500;
     }
+
+    .add-to-cart-btn:hover {
+      background-color: #1e5a23;
+      border-color: #1e5a23;
+    }
+
+    .back-btn {
+      margin-top: 1.5rem;
+    }
+
     #cart-count {
       font-size: 0.7rem;
+    }
+
+    .toast-container {
+      z-index: 1100;
+    }
+
+    .toast-success {
+      background-color: var(--primary-color) !important;
     }
   </style>
 </head>
 <body>
-<nav class="navbar navbar-light bg-light justify-content-between px-4">
-  <a class="navbar-brand" href="/">Магазин растений</a>
-  <a href="/cart" class="btn btn-outline-dark position-relative">
-    <i class="bi bi-cart"></i> Корзина
-    <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" th:text="${cartCount}">0</span>
-  </a>
+<!-- Навигационная панель -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light px-4 py-3">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/">
+      <i class="bi bi-flower1 me-2"></i>Магазин растений
+    </a>
+
+    <div class="d-flex align-items-center">
+      <!-- Кнопка корзины -->
+      <a href="/cart" class="btn btn-outline-dark position-relative me-3">
+        <i class="bi bi-cart"></i> Корзина
+        <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" th:text="${cartCount}">0</span>
+      </a>
+
+      <!-- Кнопка профиля -->
+      <a href="/home" class="btn btn-outline-dark me-3">
+        <i class="bi bi-person"></i>
+      </a>
+
+      <!-- Кнопка выхода -->
+      <a th:if="${#authentication.principal != 'anonymousUser'}"
+         href="/logout"
+         class="btn btn-outline-danger"
+         title="Выйти">
+        <i class="bi bi-box-arrow-right"></i>
+      </a>
+    </div>
+  </div>
 </nav>
 
-<div class="container mt-4">
-  <div class="row">
-    <div class="col-md-6">
-      <img th:src="${plant.imageUrl}" class="img-fluid rounded plant-image" onerror="this.src='/Uploads/default-plant.png'">
-    </div>
-    <div class="col-md-6">
-      <h1 th:text="${plant.name}"></h1>
-      <p class="text-muted" th:text="${plant.plantType}"></p>
-      <h3 class="text-success" th:text="${#numbers.formatDecimal(plant.price, 1, 2)} + ' ₽'"></h3>
-      <p class="lead" th:text="${plant.description}"></p>
-
-      <div th:if="${plant.stockQuantity > 0}">
-        <p class="text-success">
-          <i class="bi bi-check-circle"></i> В наличии: <span th:text="${plant.stockQuantity}"></span> шт.
+<!-- Основной контент -->
+<div class="container my-4">
+  <div class="plant-container">
+    <div class="row">
+      <div class="col-md-6 mb-4 mb-md-0">
+        <img th:src="@{${plant.imageUrl}}"
+             class="plant-image"
+             alt="Изображение растения"
+             onerror="this.src='/images/default-plant.jpg'">
+      </div>
+      <div class="col-md-6">
+        <h1 class="plant-header" th:text="${plant.name}"></h1>
+        <p class="plant-type">
+          <i class="bi bi-tag"></i>
+          <span th:text="${plant.plantType}"></span>
         </p>
 
-        <div class="quantity-control mb-3">
-          <button type="button" class="btn btn-outline-secondary quantity-btn minus-btn">
-            <i class="bi bi-dash"></i>
-          </button>
+        <h3 class="plant-price" th:text="${#numbers.formatDecimal(plant.price, 1, 2)} + ' ₽'"></h3>
 
-          <input type="number" id="quantityInput" class="form-control quantity-input"
-                 value="1" min="1" th:max="${plant.stockQuantity}">
+        <div class="plant-description" th:text="${plant.description}"></div>
 
-          <button type="button" class="btn btn-outline-secondary quantity-btn plus-btn">
-            <i class="bi bi-plus"></i>
+        <!-- Блок наличия и добавления в корзину -->
+        <div th:if="${plant.stockQuantity > 0}">
+          <div class="stock-status in-stock">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>В наличии: <span th:text="${plant.stockQuantity}"></span> шт.</span>
+          </div>
+
+          <div class="quantity-control">
+            <button type="button" class="btn btn-outline-secondary quantity-btn minus-btn">
+              <i class="bi bi-dash"></i>
+            </button>
+
+            <input type="number" id="quantityInput" class="form-control quantity-input"
+                   value="1" min="1" th:max="${plant.stockQuantity}">
+
+            <button type="button" class="btn btn-outline-secondary quantity-btn plus-btn">
+              <i class="bi bi-plus"></i>
+            </button>
+          </div>
+
+          <button id="addToCartBtn" class="btn btn-success add-to-cart-btn" th:data-plant-id="${plant.id}">
+            <i class="bi bi-cart-plus me-1"></i>Добавить в корзину
           </button>
         </div>
 
-        <button id="addToCartBtn" class="btn btn-success add-to-cart-btn" th:data-plant-id="${plant.id}">
-          <i class="bi bi-cart-plus"></i> Добавить в корзину
-        </button>
-      </div>
+        <!-- Нет в наличии -->
+        <div th:unless="${plant.stockQuantity > 0}">
+          <div class="stock-status out-of-stock">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            <span>Нет в наличии</span>
+          </div>
+        </div>
 
-      <div th:unless="${plant.stockQuantity > 0}">
-        <p class="text-danger">
-          <i class="bi bi-exclamation-circle"></i> Нет в наличии
-        </p>
+        <a th:href="@{/catalog}" class="btn btn-outline-secondary back-btn">
+          <i class="bi bi-arrow-left me-1"></i>Вернуться в каталог
+        </a>
       </div>
-
-      <a th:href="@{/catalog}" class="btn btn-outline-secondary mt-3">
-        <i class="bi bi-arrow-left"></i> Вернуться в каталог
-      </a>
     </div>
   </div>
 </div>
 
 <!-- Toast-уведомление -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-  <div id="cartToast" class="toast align-items-center text-bg-success border-0" role="alert">
+<div class="position-fixed bottom-0 end-0 p-3 toast-container">
+  <div id="cartToast" class="toast align-items-center text-white bg-success border-0" role="alert">
     <div class="d-flex">
       <div class="toast-body">
-        <i class="bi bi-check-circle me-2"></i> Товар добавлен в корзину!
+        <i class="bi bi-check-circle me-2"></i>Товар добавлен в корзину!
       </div>
       <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
     </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const addToCartBtn = document.getElementById('addToCartBtn');
@@ -105,21 +252,9 @@
     const minusBtn = document.querySelector('.minus-btn');
     const plusBtn = document.querySelector('.plus-btn');
     const cartCountElement = document.getElementById('cart-count');
-    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
-
-    // Проверка наличия элементов
-    if (!addToCartBtn || !quantityInput || !csrfToken) {
-      console.error('Отсутствуют необходимые элементы или CSRF-токен:', { addToCartBtn, quantityInput, csrfToken });
-      if (addToCartBtn) addToCartBtn.disabled = true;
-      return;
-    }
-
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
     const plantId = addToCartBtn.getAttribute('data-plant-id');
-    if (!plantId || isNaN(parseInt(plantId))) {
-      console.error('Некорректный plantId:', plantId);
-      addToCartBtn.disabled = true;
-      return;
-    }
+    const toast = new bootstrap.Toast(document.getElementById('cartToast'));
 
     // Обработчики кнопок +/-
     minusBtn.addEventListener('click', function () {
@@ -144,8 +279,6 @@
         return;
       }
 
-      console.log('Отправка запроса:', { plantId, quantity, csrfToken }); // Отладка
-
       fetch('/cart/add', {
         method: 'POST',
         headers: {
@@ -155,24 +288,23 @@
         body: `plantId=${encodeURIComponent(plantId)}&quantity=${encodeURIComponent(quantity)}`
       })
               .then(response => {
-                console.log('Ответ сервера:', response.status, response.statusText); // Отладка
                 if (!response.ok) {
                   return response.json().then(err => {
-                    throw new Error(err.message || `HTTP error! Status: ${response.status}`);
+                    throw new Error(err.message || 'Ошибка сервера');
                   });
                 }
                 return response.json();
               })
               .then(data => {
                 if (data.success) {
-                  showToast();
+                  toast.show();
                   updateCartCounter();
                 } else {
-                  throw new Error(data.message || 'Ошибка при добавлении в корзину');
+                  throw new Error(data.message || 'Неизвестная ошибка');
                 }
               })
               .catch(err => {
-                console.error('Ошибка при добавлении в корзину:', err);
+                console.error('Ошибка:', err);
                 alert(err.message || 'Не удалось добавить товар в корзину');
               });
     });
@@ -183,32 +315,18 @@
         credentials: 'same-origin'
       })
               .then(res => {
-                if (!res.ok) {
-                  throw new Error(`HTTP error! Status: ${res.status}`);
-                }
+                if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
                 return res.text();
               })
               .then(count => {
                 const numericCount = Number(count);
                 if (!isNaN(numericCount) && numericCount >= 0) {
                   cartCountElement.textContent = numericCount;
-                } else {
-                  console.warn('Некорректное значение счетчика:', count);
                 }
               })
-              .catch(err => {
-                console.error('Ошибка при обновлении счетчика:', err);
-              });
-    }
-
-    // Показ уведомления
-    function showToast() {
-      const toastEl = document.getElementById('cartToast');
-      const toast = new bootstrap.Toast(toastEl);
-      toast.show();
+              .catch(err => console.error('Ошибка при обновлении счетчика:', err));
     }
   });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

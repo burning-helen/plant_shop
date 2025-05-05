@@ -43,14 +43,12 @@ public class UsersController {
     @PostMapping("/save")
     public String saveUser(@ModelAttribute("user") User user) {
         if (user.getId() == null) {
-            // Новый пользователь — обязательно установить пароль (захешируй!)
             if (user.getPassword() == null || user.getPassword().isEmpty()) {
                 throw new IllegalArgumentException("Пароль обязателен для новых пользователей");
             }
 
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         } else {
-            // Существующий пользователь — не обновляем пароль
             User existing = userRepo.findById(user.getId()).orElseThrow();
             user.setPassword(existing.getPassword());
         }

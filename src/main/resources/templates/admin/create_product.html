@@ -1,84 +1,281 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Добавить новый товар</title>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="_csrf" th:content="${_csrf.token}" />
+    <title>Добавить товар | Магазин растений</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #2e7d32;
+            --secondary-color: #81c784;
+            --light-bg: #f8f9fa;
+            --dark-text: #212529;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+        }
+
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background-color: white !important;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color) !important;
+            font-size: 1.5rem;
+        }
+
+        .product-form-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background-color: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .form-header {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.25rem rgba(46, 125, 50, 0.25);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #1e5a23;
+            border-color: #1e5a23;
+        }
+
+        .back-buttons {
+            margin-top: 2rem;
+        }
+
+        .category-selector {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .category-selector > div {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .category-selector {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
-<body class="p-4">
+<body>
+<!-- Навигационная панель -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light px-4 py-3">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">
+            <i class="bi bi-flower1 me-2"></i>Магазин растений
+        </a>
 
-<h1 class="mb-4">Добавить новый товар</h1>
+        <div class="d-flex align-items-center">
+            <!-- Кнопка корзины -->
+            <a href="/cart" class="btn btn-outline-dark position-relative me-3">
+                <i class="bi bi-cart"></i> Корзина
+                <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" th:text="${cartCount}">0</span>
+            </a>
 
-<form th:action="@{/admin/products}" th:object="${plant}" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-    <div class="mb-3">
-        <label for="name" class="form-label">Название</label>
-        <input type="text" id="name" th:field="*{name}" class="form-control" required>
+            <!-- Кнопка профиля -->
+            <a href="/home" class="btn btn-outline-dark me-3">
+                <i class="bi bi-person"></i>
+            </a>
+
+            <!-- Кнопка выхода -->
+            <a th:if="${#authentication.principal != 'anonymousUser'}"
+               href="/logout"
+               class="btn btn-outline-danger"
+               title="Выйти">
+                <i class="bi bi-box-arrow-right"></i>
+            </a>
+        </div>
     </div>
+</nav>
 
-    <div class="mb-3">
-        <label for="description" class="form-label">Описание</label>
-        <textarea id="description" th:field="*{description}" class="form-control" rows="3" required></textarea>
+<!-- Основной контент -->
+<div class="container my-4">
+    <div class="product-form-container">
+        <h1 class="form-header">
+            <i class="bi bi-plus-circle me-2"></i>Добавить новый товар
+        </h1>
+
+        <form th:action="@{/admin/products}" th:object="${plant}" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            <!-- Основная информация -->
+            <div class="mb-4">
+                <h5 class="mb-3"><i class="bi bi-info-circle me-2"></i>Основная информация</h5>
+                <div class="mb-3">
+                    <label for="name" class="form-label">Название</label>
+                    <input type="text" id="name" th:field="*{name}" class="form-control" required>
+                    <div class="invalid-feedback">Пожалуйста, укажите название товара</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Описание</label>
+                    <textarea id="description" th:field="*{description}" class="form-control" rows="4" required></textarea>
+                    <div class="invalid-feedback">Пожалуйста, добавьте описание товара</div>
+                </div>
+            </div>
+
+            <!-- Цена и количество -->
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <label for="price" class="form-label">Цена (₽)</label>
+                    <div class="input-group">
+                        <input type="number" id="price" th:field="*{price}" step="0.01" min="0" class="form-control" required>
+                        <span class="input-group-text">₽</span>
+                    </div>
+                    <div class="invalid-feedback">Пожалуйста, укажите корректную цену</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="stockQuantity" class="form-label">Количество на складе</label>
+                    <input type="number" id="stockQuantity" th:field="*{stockQuantity}" min="0" class="form-control" required>
+                    <div class="invalid-feedback">Пожалуйста, укажите количество</div>
+                </div>
+            </div>
+
+            <!-- Категории -->
+            <div class="mb-4">
+                <h5 class="mb-3"><i class="bi bi-tags me-2"></i>Категории</h5>
+                <div class="category-selector">
+                    <div class="mb-3">
+                        <label for="parentCategory" class="form-label">Главная категория</label>
+                        <select id="parentCategory" name="parentCategoryId" class="form-select" required>
+                            <option value="" disabled selected>Выберите главную категорию</option>
+                            <option th:each="parent : ${categories}"
+                                    th:value="${parent.id}"
+                                    th:text="${parent.name}">
+                            </option>
+                        </select>
+                        <div class="invalid-feedback">Пожалуйста, выберите категорию</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="subCategory" class="form-label">Подкатегория</label>
+                        <select id="subCategory" name="subCategoryId" class="form-select" required>
+                            <option value="" disabled selected>Выберите подкатегорию</option>
+                            <th:block th:each="parent : ${categories}">
+                                <th:block th:if="${#maps.containsKey(subcategoriesMap, parent.id)}">
+                                    <th:block th:each="sub : ${subcategoriesMap.get(parent.id)}">
+                                        <option th:value="${sub.id}" th:text="${parent.name + ' → ' + sub.name}"></option>
+                                    </th:block>
+                                </th:block>
+                            </th:block>
+                        </select>
+                        <div class="invalid-feedback">Пожалуйста, выберите подкатегорию</div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="plantType" class="form-label">Тип растения</label>
+                    <select id="plantType" th:field="*{plantType}" class="form-select" required>
+                        <option value="" disabled selected>Выберите тип</option>
+                        <option th:each="type : ${plantTypes}"
+                                th:value="${type}"
+                                th:text="${type}"></option>
+                    </select>
+                    <div class="invalid-feedback">Пожалуйста, выберите тип растения</div>
+                </div>
+            </div>
+
+            <!-- Изображение -->
+            <div class="mb-4">
+                <h5 class="mb-3"><i class="bi bi-image me-2"></i>Изображение</h5>
+                <div class="mb-3">
+                    <label for="imageFile" class="form-label">Загрузить изображение</label>
+                    <input type="file" id="imageFile" name="imageFile" class="form-control" accept="image/png, image/jpeg, image/webp">
+                    <div class="form-text">Рекомендуемый формат: JPEG или PNG, минимальный размер 500x500px</div>
+                </div>
+            </div>
+
+            <!-- Кнопки -->
+            <div class="d-flex justify-content-between mt-4">
+                <div>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-save me-1"></i>Создать товар
+                    </button>
+                </div>
+                <div class="back-buttons">
+                    <a th:href="@{/admin/products}" class="btn btn-outline-secondary me-2">
+                        <i class="bi bi-arrow-left me-1"></i>К списку товаров
+                    </a>
+                    <a th:href="@{/home}" class="btn btn-outline-secondary">
+                        <i class="bi bi-house me-1"></i>На главную
+                    </a>
+                </div>
+            </div>
+        </form>
     </div>
-
-    <div class="mb-3">
-        <label for="price" class="form-label">Цена</label>
-        <input type="number" id="price" th:field="*{price}" step="0.01" class="form-control" required>
-    </div>
-
-    <div class="mb-3">
-        <label for="parentCategory" class="form-label">Главная категория</label>
-        <select id="parentCategory" name="parentCategoryId" class="form-select" required>
-            <option value="" disabled selected>Выберите главную категорию</option>
-            <option th:each="parent : ${categories}"
-                    th:value="${parent.id}"
-                    th:text="${parent.name}">
-            </option>
-        </select>
-    </div>
-
-    <div class="mb-3">
-        <label for="subCategory" class="form-label">Подкатегория</label>
-        <select id="subCategory" name="subCategoryId" class="form-select" required>
-            <option value="" disabled selected>Выберите подкатегорию</option>
-            <th:block th:each="parent : ${categories}">
-                <th:block th:if="${#maps.containsKey(subcategoriesMap, parent.id)}">
-                    <th:block th:each="sub : ${subcategoriesMap.get(parent.id)}">
-                        <option th:value="${sub.id}" th:text="${parent.name + ' → ' + sub.name}"></option>
-                    </th:block>
-                </th:block>
-            </th:block>
-        </select>
-    </div>
-
-    <div class="mb-3">
-        <label for="plantType" class="form-label">Тип растения</label>
-        <select id="plantType" th:field="*{plantType}" class="form-select" required>
-            <option value="" disabled selected>Выберите тип</option>
-            <option th:each="type : ${plantTypes}"
-                    th:value="${type}"
-                    th:text="${type}"></option>
-        </select>
-    </div>
-
-    <div class="mb-3">
-        <label for="stockQuantity" class="form-label">Количество на складе</label>
-        <input type="number" id="stockQuantity" th:field="*{stockQuantity}" class="form-control" required>
-    </div>
-
-    <div class="mb-3">
-        <label for="imageFile" class="form-label">Изображение</label>
-        <input type="file" id="imageFile" name="imageFile" class="form-control" accept="image/png, image/jpeg">
-    </div>
-
-    <button type="submit" class="btn btn-primary">Создать товар</button>
-</form>
-
-<hr class="my-4">
-
-<a th:href="@{/admin/products}" class="btn btn-outline-secondary me-2">⬅️ Назад к списку товаров</a>
-<a th:href="@{/home}" class="btn btn-outline-secondary">🏠 На главную</a>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Валидация формы
+    (function() {
+        'use strict';
+        const forms = document.querySelectorAll('.needs-validation');
+
+        Array.from(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+
+    // Обновление списка подкатегорий при выборе главной категории
+    document.getElementById('parentCategory').addEventListener('change', function() {
+        const parentId = this.value;
+        const subCategorySelect = document.getElementById('subCategory');
+        const options = subCategorySelect.querySelectorAll('option');
+
+        // Скрываем все опции кроме первой
+        options.forEach((opt, index) => {
+            if (index === 0) return;
+            opt.style.display = 'none';
+        });
+
+        // Показываем только подкатегории выбранной главной категории
+        if (parentId) {
+            options.forEach(opt => {
+                if (opt.value && opt.getAttribute('data-parent') === parentId) {
+                    opt.style.display = 'block';
+                }
+            });
+
+            subCategorySelect.value = '';
+        }
+    });
+</script>
 </body>
 </html>
