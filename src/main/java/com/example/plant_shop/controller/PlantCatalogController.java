@@ -1,8 +1,10 @@
 package com.example.plant_shop.controller;
 
 import com.example.plant_shop.model.Cart;
+import com.example.plant_shop.model.Category;
 import com.example.plant_shop.model.Plant;
 import com.example.plant_shop.model.User;
+import com.example.plant_shop.repository.CategoryRepository;
 import com.example.plant_shop.repository.PlantRepository;
 import com.example.plant_shop.service.CartService;
 import com.example.plant_shop.service.CategoryService;
@@ -16,8 +18,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Controller
@@ -34,16 +38,15 @@ public class PlantCatalogController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private CategoryRepository categoryRepository;
 
-    // Главная страница каталога
     @GetMapping("/catalog")
     public String showCatalog(
             @RequestParam(required = false) String categoryName,
             @RequestParam(required = false) String subcategoryName,
             @RequestParam(required = false) String search,
             Model model, HttpSession session) {
-
-
 
         Cart cart = cartService.getCurrentCart(session, userService.getCurrentUser());
         model.addAttribute("cart", cart);
@@ -67,14 +70,24 @@ public class PlantCatalogController {
             plants = plantRepository.findAll();
         }
 
-
         int count = cartService.getCartItemCount(session);
         model.addAttribute("cartCount", count);
         model.addAttribute("plants", plants);
         model.addAttribute("categories", categoryService.findAllMainCategories());
-        model.addAttribute("subcategories", categoryService.findSubcategories());
+
+        // Загружаем подкатегории только для выбранной категории
+        List<Category> subcategories = categoryName != null ?
+                categoryService.findSubcategoriesByParentName(categoryName) :
+                Collections.emptyList();
+        model.addAttribute("subcategories", subcategories);
 
         return "catalog";
+    }
+
+    @GetMapping("/catalog/subcategories")
+    @ResponseBody
+    public List<Category> getSubcategories(@RequestParam String parent) {
+        return categoryService.findSubcategoriesByParentName(parent);
     }
 
     // Просмотр растений по категории

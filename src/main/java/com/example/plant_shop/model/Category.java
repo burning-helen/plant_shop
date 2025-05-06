@@ -13,11 +13,11 @@ public class Category {
 
     private String name;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Category parent; // Родительская категория
 
-    @OneToMany(mappedBy = "parent")
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Category> subcategories; // Список подкатегорий
 
     @OneToMany(mappedBy = "parentCategory")

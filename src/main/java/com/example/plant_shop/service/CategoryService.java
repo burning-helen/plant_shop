@@ -41,4 +41,8 @@ public class CategoryService {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
     }
+
+    public List<Category> findSubcategoriesByParentName(String parentName) {
+        return categoryRepository.findByParent_Name(parentName);
+    }
 }

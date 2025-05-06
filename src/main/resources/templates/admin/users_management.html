@@ -163,8 +163,8 @@
                         <div class="col-md-6 mb-3">
                             <label for="role" class="form-label">Роль:</label>
                             <select class="form-select" id="role" th:field="*{role}">
-                                <option value="USER">Пользователь</option>
-                                <option value="ADMIN">Администратор</option>
+                                <option value="ROLE_USER">Пользователь</option>
+                                <option value="ROLE_ADMIN">Администратор</option>
                             </select>
                         </div>
                     </div>
@@ -214,7 +214,7 @@
                         <td th:text="${user.email}"></td>
                         <td>
                                 <span th:text="${user.role}"
-                                      th:class="${user.role == 'ADMIN'} ? 'badge bg-primary' : 'badge bg-secondary'">
+                                      th:class="${user.role == 'ROLE_ADMIN'} ? 'badge bg-primary' : 'badge bg-secondary'">
                                 </span>
                         </td>
                         <td class="action-buttons text-end">

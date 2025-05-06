@@ -53,7 +53,20 @@ public class UsersController {
             user.setPassword(existing.getPassword());
         }
 
-        userRepo.save(user);
+        User existingUser = userRepo.findById(user.getId()).orElseThrow();
+
+        // Обновляем только необходимые поля
+        existingUser.setUsername(user.getUsername());
+        existingUser.setEmail(user.getEmail());
+        existingUser.setFirstName(user.getFirstName());
+        existingUser.setLastName(user.getLastName());
+        existingUser.setAge(user.getAge());
+        existingUser.setRole(user.getRole());
+
+        // Поля phoneNumber и address остаются без изменений
+
+        userRepo.save(existingUser);
+
         return "redirect:/admin/users";
     }
 
