@@ -21,6 +21,12 @@ public class HomeController {
         return "home";
     }
 
+    @GetMapping("/author")
+    public String authorPage() {return "author";}
+
+    @GetMapping("/about")
+    public String aboutPage() {return "about";}
+
     @GetMapping("/logout")
     public String logoutPage(HttpServletRequest request, HttpServletResponse response) {
         // Завершение сессии Spring Security

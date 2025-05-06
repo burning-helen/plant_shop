@@ -141,12 +141,13 @@
         <div class="mb-4">
           <h5><i class="bi bi-truck me-2"></i>Данные доставки</h5>
           <hr>
+          <!-- В форме доставки -->
           <div class="mb-3">
             <label for="deliveryAddress" class="form-label">Адрес доставки</label>
             <textarea class="form-control" id="deliveryAddress"
                       th:field="*{deliveryAddress}"
                       rows="3" required
-                      placeholder="Укажите полный адрес доставки"></textarea>
+                      th:attr="data-user-address=${userAddress != null ? userAddress : ''}"></textarea>
           </div>
         </div>
 
@@ -201,6 +202,13 @@
     const formContainer = document.getElementById("orderFormContainer");
     const thankYouBlock = document.getElementById("thankYouBlock");
 
+    const addressField = document.getElementById('deliveryAddress');
+    const userAddress = addressField.getAttribute('data-user-address');
+
+    if (userAddress && !addressField.value) {
+      addressField.value = userAddress;
+    }
+
     form.addEventListener("submit", function (e) {
       e.preventDefault();
 
@@ -229,5 +237,6 @@
     });
   });
 </script>
+<div th:replace="~{fragments/footer :: main-footer}"></div>
 </body>
 </html>

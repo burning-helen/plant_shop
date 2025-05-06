@@ -88,16 +88,26 @@ public class AdminPlantController {
     public String showEditForm(@PathVariable Long id, Model model) {
         Plant plant = plantService.findPlantById(id);
 
+        // Получаем все родительские категории
+        List<Category> categories = categoryService.findAllMainCategories();
 
-        // Добавляем все необходимые атрибуты
+        // Создаем карту всех подкатегорий для всех категорий
+        Map<Long, List<Category>> subcategoriesMap = new HashMap<>();
+        for (Category category : categories) {
+            subcategoriesMap.put(category.getId(),
+                    categoryService.findSubcategoriesByParentId(category.getId()));
+        }
+
+        // Добавляем атрибуты в модель
         model.addAttribute("plant", plant);
-        model.addAttribute("categories", categoryService.findAllMainCategories());
+        model.addAttribute("categories", categories);
+        model.addAttribute("subcategoriesMap", subcategoriesMap);
         model.addAttribute("plantTypes", Plant.PlantType.values());
 
-        // Добавляем подкатегории для текущей категории растения
+        // Добавляем текущие подкатегории для выбранной категории
         if (plant.getParentCategory() != null) {
             model.addAttribute("subcategories",
-                    categoryService.findSubcategoriesByParentId(plant.getParentCategory().getId()));
+                    subcategoriesMap.get(plant.getParentCategory().getId()));
         } else {
             model.addAttribute("subcategories", List.of());
         }
@@ -105,11 +115,13 @@ public class AdminPlantController {
         return "admin/edit_product";
     }
 
-    @GetMapping("/subcategories")
+    @GetMapping("/categories/{parentId}/subcategories")
     @ResponseBody
-    public List<Category> getSubcategories(@RequestParam Long parentId) {
+    public List<Category> getSubcategories(@PathVariable Long parentId) {
         return categoryService.findSubcategoriesByParentId(parentId);
     }
+
+
 
     @PostMapping("/{id}/edit")
     public String updatePlant(

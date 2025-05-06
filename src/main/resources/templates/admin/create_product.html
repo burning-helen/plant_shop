@@ -183,24 +183,27 @@
                             <th:block th:each="parent : ${categories}">
                                 <th:block th:if="${#maps.containsKey(subcategoriesMap, parent.id)}">
                                     <th:block th:each="sub : ${subcategoriesMap.get(parent.id)}">
-                                        <option th:value="${sub.id}" th:text="${parent.name + ' → ' + sub.name}"></option>
+                                        <option th:value="${sub.id}"
+                                                th:text="${parent.name + ' → ' + sub.name}"
+                                                th:attr="data-parent=${parent.id}">
+                                        </option>
                                     </th:block>
                                 </th:block>
                             </th:block>
                         </select>
                         <div class="invalid-feedback">Пожалуйста, выберите подкатегорию</div>
                     </div>
-                </div>
 
-                <div class="mb-3">
-                    <label for="plantType" class="form-label">Тип растения</label>
-                    <select id="plantType" th:field="*{plantType}" class="form-select" required>
-                        <option value="" disabled selected>Выберите тип</option>
-                        <option th:each="type : ${plantTypes}"
-                                th:value="${type}"
-                                th:text="${type}"></option>
-                    </select>
-                    <div class="invalid-feedback">Пожалуйста, выберите тип растения</div>
+                    <div class="mb-3">
+                        <label for="plantType" class="form-label">Тип растения</label>
+                        <select id="plantType" th:field="*{plantType}" class="form-select" required>
+                            <option value="" disabled selected>Выберите тип</option>
+                            <option th:each="type : ${plantTypes}"
+                                    th:value="${type}"
+                                    th:text="${type}"></option>
+                        </select>
+                        <div class="invalid-feedback">Пожалуйста, выберите тип растения</div>
+                    </div>
                 </div>
             </div>
 
@@ -277,5 +280,6 @@
         }
     });
 </script>
+<div th:replace="~{fragments/footer :: main-footer}"></div>
 </body>
 </html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Об авторе | Магазин растений</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    /* Основные стили из вашего шаблона */
+    :root {
+      --primary-color: #2e7d32;
+      --secondary-color: #81c784;
+      --light-bg: #f8f9fa;
+      --dark-text: #212529;
+    }
+
+    .about-container {
+      max-width: 1000px;
+      margin: 2rem auto;
+    }
+
+    .about-header {
+      color: var(--primary-color);
+      border-bottom: 2px solid var(--secondary-color);
+      padding-bottom: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .author-card {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    .author-img {
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .social-icon {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+      margin-right: 1rem;
+      transition: color 0.3s;
+    }
+
+    .social-icon:hover {
+      color: #1e5a23;
+    }
+
+    .navbar {
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      background-color: white !important;
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      color: var(--primary-color) !important;
+      font-size: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light px-4 py-3">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/">
+      <i class="bi bi-flower1 me-2"></i>Магазин растений
+    </a>
+
+    <div class="d-flex align-items-center">
+      <!-- Кнопка корзины -->
+      <a href="/cart" class="btn btn-outline-dark position-relative me-3">
+        <i class="bi bi-cart"></i> Корзина
+        <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" th:text="${cartCount}">0</span>
+      </a>
+
+      <!-- Кнопка профиля -->
+      <a href="/home" class="btn btn-outline-dark me-3">
+        <i class="bi bi-person"></i>
+      </a>
+
+      <!-- Кнопка выхода -->
+      <a th:if="${#authentication.principal != 'anonymousUser'}"
+         href="/logout"
+         class="btn btn-outline-danger"
+         title="Выйти">
+        <i class="bi bi-box-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- Основной контент -->
+<div class="container my-4">
+  <div class="about-container">
+    <h1 class="about-header">
+      <i class="bi bi-person-badge me-2"></i>Об авторе
+    </h1>
+
+    <div class="author-card">
+      <div class="row g-0">
+        <div class="col-md-4">
+          <img src="/uploads/author.jpg" class="img-fluid author-img" alt="Фото автора">
+        </div>
+        <div class="col-md-8 p-4">
+          <h2 class="mb-3">Елена Бурняшева</h2>
+          <h5 class="text-muted mb-4">Основательница магазина</h5>
+
+          <div class="mb-4">
+            <p>Приветствую вас в моём зелёном уголке! Я создала этот магазин из любви к растениям и желания делиться этой любовью с другими.</p>
+            <p>Мое увлечение растениями началось с небольшого хобби и переросло в создание целой площадки, где вы сможете найти для себя растение на любой вкус!</p>
+          </div>
+
+          <div class="mb-4">
+            <h5><i class="bi bi-award me-2"></i>Квалификация</h5>
+            <ul>
+              <li>Диплом биолога-ботаника МГУ</li>
+              <li>Сертификат по тропическим растениям (Royal Botanic Gardens, Kew)</li>
+              <li>Автор 3 научных статей по фитодизайну</li>
+            </ul>
+          </div>
+
+          <div>
+            <h5><i class="bi bi-chat-square-text me-2"></i>Связь со мной</h5>
+            <div class="d-flex mt-3">
+              <a href="#" class="social-icon"><i class="bi bi-telegram"></i></a>
+              <a href="#" class="social-icon"><i class="bi bi-instagram"></i></a>
+              <a href="#" class="social-icon"><i class="bi bi-envelope"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer th:replace="~{fragments/footer :: main-footer}"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

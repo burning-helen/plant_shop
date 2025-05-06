@@ -26,7 +26,7 @@ public class SecurityConfig {
                                                    CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/catalog/**", "/login", "/register", "/uploads/**", "/cart/**").permitAll()
+                        .requestMatchers("/", "/catalog/**", "/login", "/register", "/uploads/**", "/cart/**", "/author", "/about").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
