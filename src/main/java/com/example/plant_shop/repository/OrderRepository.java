@@ -18,8 +18,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     List<Order> findAllByOrderByOrderDateDesc();
 
-    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items WHERE o.user = :user ORDER BY o.orderDate DESC")
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.items i LEFT JOIN FETCH i.plant WHERE o.user = :user")
     List<Order> findWithItemsByUser(@Param("user") User user);
+
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.items i LEFT JOIN FETCH i.plant ORDER BY o.orderDate DESC")
+    List<Order> findAllWithItemsOrderByOrderDateDesc();
 
     @Query("SELECT new com.example.plant_shop.dto.OrderStatisticsDTO(oi.plant.name, SUM(oi.quantity), SUM(oi.quantity * oi.price)) " +
             "FROM Order o JOIN o.items oi " +

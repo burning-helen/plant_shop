@@ -23,6 +23,9 @@ public class Category {
     @OneToMany(mappedBy = "parentCategory")
     private List<Plant> plantsAsParentCategory;
 
+    @Column(nullable = false)
+    private boolean active = true;
+
     @OneToMany(mappedBy = "subcategory")
     private List<Plant> plantsAsSubcategory;
 
@@ -50,4 +53,12 @@ public class Category {
 
     public List<Plant> getPlantsAsSubcategory() { return plantsAsSubcategory; }
     public void setPlantsAsSubcategory(List<Plant> plantsAsSubcategory) { this.plantsAsSubcategory = plantsAsSubcategory; }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 }

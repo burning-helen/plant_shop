@@ -57,17 +57,17 @@ public class PlantCatalogController {
             plants = plantRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(search);
             model.addAttribute("searchQuery", search);
         } else if (categoryName != null && !categoryName.isEmpty() && subcategoryName != null && !subcategoryName.isEmpty()) {
-            plants = plantRepository.findByParentCategory_NameAndSubcategory_Name(categoryName, subcategoryName);
+            plants = plantRepository.findActiveByParentAndSubcategory(categoryName, subcategoryName);
             model.addAttribute("categoryName", categoryName);
             model.addAttribute("subcategoryName", subcategoryName);
         } else if (categoryName != null && !categoryName.isEmpty()) {
-            plants = plantRepository.findByParentCategory_Name(categoryName);
+            plants = plantRepository.findActiveByParentCategory_Name(categoryName);
             model.addAttribute("categoryName", categoryName);
         } else if (subcategoryName != null && !subcategoryName.isEmpty()) {
-            plants = plantRepository.findBySubcategory_Name(subcategoryName);
+            plants = plantRepository.findActiveBySubcategory_Name(subcategoryName);
             model.addAttribute("subcategoryName", subcategoryName);
         } else {
-            plants = plantRepository.findAll();
+            plants = plantRepository.findAllActive();
         }
 
         int count = cartService.getCartItemCount(session);
@@ -101,16 +101,16 @@ public class PlantCatalogController {
 
         if (categoryName != null && subcategoryName != null) {
             // Поиск по обеим категориям
-            plants = plantRepository.findByParentCategory_NameAndSubcategory_Name(categoryName, subcategoryName);
+            plants = plantRepository.findActiveByParentAndSubcategory(categoryName, subcategoryName);
         } else if (categoryName != null) {
             // Поиск только по категории
-            plants = plantRepository.findByParentCategory_Name(categoryName);
+            plants = plantRepository.findActiveByParentCategory_Name(categoryName);
         } else if (subcategoryName != null) {
             // Поиск только по подкатегории
-            plants = plantRepository.findBySubcategory_Name(subcategoryName);
+            plants = plantRepository.findActiveBySubcategory_Name(subcategoryName);
         } else {
             // Если ни категория, ни подкатегория не заданы, показать все растения
-            plants = plantRepository.findAll();
+            plants = plantRepository.findAllActive();
         }
 
         model.addAttribute("plants", plants);

@@ -2,6 +2,7 @@ package com.example.plant_shop.controller;
 
 import com.example.plant_shop.model.User;
 import com.example.plant_shop.repository.UserRepository;
+import com.example.plant_shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -21,6 +22,8 @@ public class UsersController {
     private UserRepository userRepo;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private UserService userService;
 
     // Страница управления пользователями
     @GetMapping
@@ -32,45 +35,65 @@ public class UsersController {
                 ? userRepo.findById(editId).orElse(new User())
                 : new User();
 
-        model.addAttribute("user", user);
+        model.addAttribute("user_for_reg", user);
         model.addAttribute("editing", editId != null);
         model.addAttribute("currentUsername", authentication.getName());
 
         return "admin/users_management";
     }
 
-    // Сохранение (нового или отредактированного) пользователя
     @PostMapping("/save")
-    public String saveUser(@ModelAttribute("user") User user) {
-        if (user.getId() == null) {
-            if (user.getPassword() == null || user.getPassword().isEmpty()) {
-                throw new IllegalArgumentException("Пароль обязателен для новых пользователей");
+    public String saveUser(@ModelAttribute("user_for_reg") User user,
+                           Model model) {
+        boolean isNew = (user.getId() == null);
+
+        // 1) Для нового пользователя: проверим, что логин не занят
+        if (isNew) {
+            if (userRepo.findByUsername(user.getUsername()).isPresent()) {
+                model.addAttribute("error", "Логин «" + user.getUsername() + "» уже используется");
+                model.addAttribute("editing", false);
+                model.addAttribute("users", userRepo.findAll());
+                model.addAttribute("user_for_reg", user);
+
+                return "admin/users_management";
             }
+            // Пароль обязателен для новых
+            if (user.getPassword() == null || user.getPassword().isBlank()) {
+                model.addAttribute("error", "Пароль обязателен для новых пользователей");
+                model.addAttribute("editing", false);
+                model.addAttribute("users", userRepo.findAll());
+                model.addAttribute("user_for_reg", user);
 
+                return "admin/users_management";
+            }
+            user.setPhoneNumber("+7000000000");
+            user.setDeliveryAddress("Адрес по умолчанию");
             user.setPassword(passwordEncoder.encode(user.getPassword()));
+            userRepo.save(user);
+
         } else {
+            // 2) Редактирование: если поменяли логин — тоже проверим уникальность
             User existing = userRepo.findById(user.getId()).orElseThrow();
-            user.setPassword(existing.getPassword());
+            if (!existing.getUsername().equals(user.getUsername())
+                    && userRepo.findByUsername(user.getUsername()).isPresent()) {
+                model.addAttribute("error", "Логин «" + user.getUsername() + "» уже используется");
+                model.addAttribute("editing", true);
+                model.addAttribute("user_for_reg", existing);
+                model.addAttribute("users", userRepo.findAll());
+                return "admin/users_management";
+            }
+            // Обновляем поля, не трогая пароль
+            existing.setUsername(user.getUsername());
+            existing.setEmail(user.getEmail());
+            existing.setFirstName(user.getFirstName());
+            existing.setLastName(user.getLastName());
+            existing.setAge(user.getAge());
+            existing.setRole(user.getRole());
+            userRepo.save(existing);
         }
-
-        User existingUser = userRepo.findById(user.getId()).orElseThrow();
-
-        // Обновляем только необходимые поля
-        existingUser.setUsername(user.getUsername());
-        existingUser.setEmail(user.getEmail());
-        existingUser.setFirstName(user.getFirstName());
-        existingUser.setLastName(user.getLastName());
-        existingUser.setAge(user.getAge());
-        existingUser.setRole(user.getRole());
-
-        // Поля phoneNumber и address остаются без изменений
-
-        userRepo.save(existingUser);
 
         return "redirect:/admin/users";
     }
-
-
     // Удаление пользователя (с проверкой, что не удаляется текущий пользователь)
     @PostMapping("/delete/{id}")
     public String deleteUser(@PathVariable Long id,
@@ -88,7 +111,7 @@ public class UsersController {
                 return "redirect:/admin/users";
             }
 
-            userRepo.delete(toDelete);
+            userService.deleteUserWithAllData(id);
             redirectAttributes.addFlashAttribute("success",
                     "Пользователь " + toDelete.getUsername() + " успешно удален.");
 
@@ -130,6 +153,7 @@ public class UsersController {
         User user = userRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Неверный ID: " + id));
         model.addAttribute("user", user);
+        model.addAttribute("user_for_reg", user);
         model.addAttribute("editing", true);
         return "admin/users_management";
     }

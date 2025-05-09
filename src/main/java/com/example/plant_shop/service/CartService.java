@@ -12,10 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.math.BigDecimal;
+import java.util.*;
 
 @Service
 public class CartService {
@@ -181,47 +179,63 @@ public class CartService {
     public void removeItem(Long itemId, HttpSession session, User user) {
         Cart cart = getCurrentCart(session, user);
 
-        Iterator<CartItem> iterator = cart.getItems().iterator();
-        while (iterator.hasNext()) {
-            CartItem item = iterator.next();
+        // Проверяем существование товара
+        boolean removed = cart.getItems().removeIf(item -> {
             if (item.getId().equals(itemId)) {
-                iterator.remove();
-                cartItemRepository.delete(item);
-                break;
+                // Дополнительные проверки, если нужно
+                return true;
             }
+            return false;
+        });
+
+        if (!removed) {
+            throw new IllegalArgumentException("Товар с ID " + itemId + " не найден в корзине");
         }
 
-
-        double total = cart.getItems().stream()
+        // Обновляем общую сумму
+        double newTotal = cart.getItems().stream()
                 .mapToDouble(item -> item.getPrice() * item.getQuantity())
                 .sum();
-        cart.setTotalAmount(total);
+        cart.setTotalAmount(newTotal);
 
-        if (user != null) {
-            cartRepository.save(cart);
-        } else {
-            session.setAttribute("cart", cart);
-        }
+        // Сохраняем изменения
+        cartRepository.save(cart);
     }
+
     @Transactional
-    public void clearCart(HttpSession session) {
-        User user = userService.getCurrentUser();
-        Cart cart = getCurrentCart(session, user);
+    public void removeItemsFromCart(List<Long> itemIds, User user) {
+        List<CartItem> itemsToRemove = cartItemRepository.findByIdInAndUser(itemIds, user);
+        cartItemRepository.deleteAll(itemsToRemove);
+    }
 
-        if (cart != null) {
-            // 1. Очищаем коллекцию items
-            List<CartItem> items = new ArrayList<>(cart.getItems());
-            cart.getItems().clear();
-
-            // 2. Удаляем все CartItem
-            cartItemRepository.deleteAll(items);
-
-            // 3. Удаляем саму корзину
-            cartRepository.delete(cart);
-
-            // 4. Очищаем сессию
-            session.removeAttribute("cart");
+    public BigDecimal calculateTotal(List<Long> itemIds) {
+        if (itemIds == null || itemIds.isEmpty()) {
+            return BigDecimal.ZERO;
         }
+
+        BigDecimal total = BigDecimal.ZERO;
+        List<CartItem> items = getItemsByIds(itemIds);
+
+        for (CartItem item : items) {
+            if (item == null) {
+                continue;
+            }
+
+            // Используем цену, либо 0, если цена не указана
+            double price = item.getPrice(); // Без null-проверки
+            int quantity = item.getQuantity() > 0 ? item.getQuantity() : 0;
+
+            // Прибавляем к общей сумме
+            total = total.add(BigDecimal.valueOf(price).multiply(BigDecimal.valueOf(quantity)));
+        }
+
+        return total;
+    }
+
+
+
+    public List<CartItem> getItemsByIds(List<Long> selectedItemIds) {
+        return cartItemRepository.findAllById(selectedItemIds);
     }
 }
 

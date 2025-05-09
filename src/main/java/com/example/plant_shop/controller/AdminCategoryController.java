@@ -44,9 +44,18 @@ public class AdminCategoryController {
         return "redirect:/admin/categories"; // Перенаправление на список категорий
     }
 
-    @PostMapping("/{id}/delete")
-    public String deleteCategory(@PathVariable Long id) {
-        categoryService.deleteCategory(id);
-        return "redirect:/admin/categories"; // Перенаправление на список категорий
+
+
+    @PostMapping("/edit/{id}")
+    public String editCategory(@PathVariable Long id,
+                               @RequestParam String name) {
+        categoryService.updateName(id, name);
+        return "redirect:/admin/categories";
+    }
+
+    @PostMapping("/toggle/{id}")
+    public String toggleCategory(@PathVariable Long id) {
+        categoryService.toggleActive(id);
+        return "redirect:/admin/categories";
     }
 }

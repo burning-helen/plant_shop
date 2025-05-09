@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -21,8 +22,22 @@ public class PlantService {
         return plantRepository.findAll();
     }
 
+    @Transactional
+    public void toggleActive(Long id) {
+        Plant plant = plantRepository.findByIdIncludingInactive(id).
+                orElseThrow(() -> new RuntimeException("Plant not found with id: " + id));;
+        if (plant.isActive()) {
+            plant.setActive(false);
+        }
+        else {
+            plant.setActive(true);
+        }
+        plantRepository.save(plant);
+    }
+
+
     public Plant findPlantById(Long id) {
-        return plantRepository.findById(id)
+        return plantRepository.findByIdIncludingInactive(id)
                 .orElseThrow(() -> new RuntimeException("Plant not found with id: " + id));
     }
 
@@ -33,10 +48,14 @@ public class PlantService {
     public void updatePlant(Plant plant) {
         plantRepository.save(plant);
     }
-
-    public void deletePlant(Long id) {
-        plantRepository.deleteById(id);
+    @Transactional
+    public void deactivatePlant(Long id) {
+        Plant plant = plantRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Plant not found with id: " + id));
+        plant.setActive(false);
+        plantRepository.save(plant);
     }
+
 
     // Методы для каталога
     public List<Plant> findAllAvailablePlants() {
@@ -44,11 +63,11 @@ public class PlantService {
     }
 
     public List<Plant> findByCategory(String categoryName) {
-        return plantRepository.findByParentCategory_Name(categoryName);
+        return plantRepository.findActiveByParentCategory_Name(categoryName);
     }
 
     public List<Plant> findBySubcategory(String subcategoryName) {
-        return plantRepository.findBySubcategory_Name(subcategoryName);
+        return plantRepository.findActiveBySubcategory_Name(subcategoryName);
     }
 
     public List<Plant> findByPlantType(PlantType plantType) {

@@ -160,11 +160,16 @@
             <a th:href="@{'/admin/products/' + ${plant.id} + '/edit'}" class="btn btn-sm btn-warning">
               <i class="bi bi-pencil"></i>
             </a>
-            <form th:action="@{'/admin/products/' + ${plant.id} + '/delete'}" method="post" style="display:inline;">
-              <button type="submit" class="btn btn-sm btn-danger">
-                <i class="bi bi-trash"></i>
+
+            <form th:action="@{'/admin/products/' + ${plant.id} + '/toggle-active'}" method="post" style="display:inline;">
+              <input type="hidden" name="_method" value="put" th:if="${plant != null}"/>
+              <button type="submit"
+                      th:classappend="${plant.active} ? 'btn-secondary' : 'btn-success'"
+                      class="btn btn-sm">
+                <i th:class="${plant.active} ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
               </button>
             </form>
+
           </td>
         </tr>
         </tbody>

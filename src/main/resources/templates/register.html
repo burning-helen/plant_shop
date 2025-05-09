@@ -12,6 +12,7 @@
             --secondary-color: #81c784;
             --light-bg: #f8f9fa;
             --dark-text: #212529;
+            --error-color: #dc3545;
         }
 
         body {
@@ -84,32 +85,15 @@
             height: 50px;
         }
 
-        .form-row {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .form-row .input-icon {
-            flex: 1;
-        }
-
         .error-message {
-            color: #dc3545;
-            text-align: center;
-            margin-top: 1rem;
-            font-weight: 500;
-        }
-
-        @media (max-width: 768px) {
-            .form-row {
-                flex-direction: column;
-                gap: 0;
-            }
+            color: var(--error-color);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
         }
     </style>
 </head>
 <body>
-<!-- Навигационная панель -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light px-4 py-3">
     <div class="container-fluid">
         <a class="navbar-brand" th:href="@{/catalog}">
@@ -123,80 +107,132 @@
     </div>
 </nav>
 
-<!-- Основной контент -->
 <div class="container my-5">
     <div class="register-container">
         <h2 class="register-header">
             <i class="bi bi-person-plus me-2"></i>Создать аккаунт
         </h2>
 
-        <form th:action="@{/register}" th:object="${user}" method="post">
+        <form id="registrationForm"
+              th:action="@{/register}"
+              th:object="${user_for_reg}"
+              method="post">
+            <input type="hidden"
+                   th:name="${_csrf.parameterName}"
+                   th:value="${_csrf.token}"/>
+
+
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             <div class="form-row">
                 <div class="input-icon">
                     <i class="bi bi-person"></i>
-                    <input type="text" class="form-control"
-                           id="firstName" name="firstName"
-                           th:field="*{firstName}"
-                           placeholder="Имя" required>
+                    <input type="text" class="form-control" th:field="*{firstName}" placeholder="Имя" required>
+                    <div th:if="${#fields.hasErrors('firstName')}" class="text-danger">
+                        <span th:errors="*{firstName}"></span>
+                    </div>
                 </div>
 
                 <div class="input-icon">
                     <i class="bi bi-person"></i>
-                    <input type="text" class="form-control"
-                           id="lastName" name="lastName"
-                           th:field="*{lastName}"
-                           placeholder="Фамилия" required>
+                    <input type="text" class="form-control" th:field="*{lastName}" placeholder="Фамилия" required>
+                    <div th:if="${#fields.hasErrors('lastName')}" class="text-danger">
+                        <span th:errors="*{lastName}"></span>
+                    </div>
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="input-icon">
                     <i class="bi bi-calendar"></i>
-                    <input type="number" class="form-control"
-                           id="age" name="age"
-                           th:field="*{age}"
-                           placeholder="Возраст" min="1" max="120" required>
+
+                        <input type="number" class="form-control"
+                               th:field="*{age}"
+                               placeholder="Возраст" min="1" max="120" required>
+                    <div th:if="${#fields.hasErrors('age')}" class="text-danger">
+                        <span th:errors="*{age}"></span>
+                    </div>
+
                 </div>
 
                 <div class="input-icon">
                     <i class="bi bi-telephone"></i>
                     <input type="tel" class="form-control"
-                           id="phoneNumber" name="phoneNumber"
                            th:field="*{phoneNumber}"
                            placeholder="Номер телефона" required>
+                    <div th:if="${#fields.hasErrors('phoneNumber')}" class="text-danger">
+                        <span th:errors="*{phoneNumber}"></span>
+                    </div>
                 </div>
             </div>
 
             <div class="input-icon">
                 <i class="bi bi-envelope"></i>
                 <input type="email" class="form-control"
-                       id="email" name="email"
                        th:field="*{email}"
                        placeholder="Электронная почта" required>
+                <div th:if="${#fields.hasErrors('email')}" class="text-danger">
+                    <span th:errors="*{email}"></span>
+                </div>
             </div>
 
             <div class="input-icon">
                 <i class="bi bi-person-badge"></i>
-                <input type="text" class="form-control"
-                       id="username" name="username"
+                <input type="text"
+                       id="username"
+                       name="username"
                        th:field="*{username}"
-                       placeholder="Логин" required>
+                       class="form-control"
+                       placeholder="Логин"
+                       required>
+                <div th:if="${#fields.hasErrors('username')}"
+                     class="text-danger">
+                    <span th:errors="*{username}"></span>
+                </div>
+                <!-- клиентская ошибка -->
+                <div id="usernameError" class="error-message">
+                    Логин должен содержать не менее 3 символов
+                </div>
             </div>
 
+            <!-- Пароль -->
             <div class="input-icon">
                 <i class="bi bi-lock"></i>
-                <input type="password" class="form-control"
-                       id="password" name="password"
+                <input type="password"
+                       id="password"
+                       name="password"
                        th:field="*{password}"
-                       placeholder="Пароль" required>
+                       class="form-control"
+                       placeholder="Пароль"
+                       required>
+                <div th:if="${#fields.hasErrors('password')}"
+                     class="text-danger">
+                    <span th:errors="*{password}"></span>
+                </div>
+                <!-- клиентская ошибка -->
+                <div id="passwordError" class="error-message">
+                    Пароль должен быть не короче 6 символов
+                </div>
+            </div>
+
+            <!-- Подтверждение пароля (если нужно) -->
+            <div class="input-icon">
+                <i class="bi bi-lock-fill"></i>
+                <input type="password"
+                       id="confirmPassword"
+                       class="form-control"
+                       placeholder="Подтвердите пароль"
+                       required>
+                <div id="confirmError" class="error-message">
+                    Пароли не совпадают
+                </div>
             </div>
 
             <button type="submit" class="btn btn-register">
                 <i class="bi bi-person-plus me-1"></i>Зарегистрироваться
             </button>
 
-            <div th:if="${error}" class="error-message">
-                <i class="bi bi-exclamation-triangle me-2"></i>
+            <div th:if="${error}" class="text-danger mt-3">
+                <i class="bi bi-exclamation-triangle me-1"></i>
                 <span th:text="${error}"></span>
             </div>
         </form>
@@ -206,6 +242,50 @@
         </div>
     </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('registrationForm');
+        const username = document.getElementById('username');
+        const password = document.getElementById('password');
+        const confirm  = document.getElementById('confirmPassword');
+
+        const usernameError = document.getElementById('usernameError');
+        const passwordError = document.getElementById('passwordError');
+        const confirmError  = document.getElementById('confirmError');
+
+        form.addEventListener('submit', e => {
+            let valid = true;
+
+            // Логин: минимум 3 символа
+            if (username.value.trim().length < 3) {
+                usernameError.style.display = 'block';
+                valid = false;
+            } else {
+                usernameError.style.display = 'none';
+            }
+
+            // Пароль: минимум 6 символов
+            if (password.value.length < 6) {
+                passwordError.style.display = 'block';
+                valid = false;
+            } else {
+                passwordError.style.display = 'none';
+            }
+
+            // Подтверждение
+            if (confirm.value !== password.value) {
+                confirmError.style.display = 'block';
+                valid = false;
+            } else {
+                confirmError.style.display = 'none';
+            }
+
+            if (!valid) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
 </body>
 </html>

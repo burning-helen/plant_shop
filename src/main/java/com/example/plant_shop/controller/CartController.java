@@ -1,7 +1,10 @@
 package com.example.plant_shop.controller;
 
 import com.example.plant_shop.service.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.ui.Model;
 import com.example.plant_shop.model.Cart;
 import com.example.plant_shop.model.Plant;
@@ -16,6 +19,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -78,11 +82,20 @@ public class CartController {
     }
 
     @PostMapping("/remove")
-    public String removeCartItem(@RequestParam Long itemId,
-                                 HttpSession session) {
-        cartService.removeItem(itemId, session, userService.getCurrentUser());
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> removeItem(@RequestParam Long itemId, HttpSession session, Principal principal) {
+        Map<String, Object> response = new HashMap<>();
 
-        return "redirect:/cart";
+        if (principal == null) {
+            response.put("success", false);
+            response.put("redirect", "/login");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        // здесь логика удаления
+        cartService.removeItem(itemId, session, userService.getCurrentUser());
+        response.put("success", true);
+        return ResponseEntity.ok(response);
     }
 
 

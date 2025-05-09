@@ -6,6 +6,7 @@ import com.example.plant_shop.model.Plant;
 import com.example.plant_shop.repository.PlantRepository;
 import com.example.plant_shop.service.CategoryService;
 import com.example.plant_shop.service.PlantService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -45,6 +46,14 @@ public class AdminPlantController {
         model.addAttribute("plants", plantService.findAllPlants());
         return "admin/products"; // Шаблон списка товаров
     }
+
+    @PostMapping("/{id}/toggle-active")
+    public String togglePlantActive(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        plantService.toggleActive(id);
+        redirectAttributes.addFlashAttribute("successMessage", "Статус товара изменен");
+        return "redirect:/admin/products";
+    }
+
 
     @GetMapping("/new")
     public String showCreateForm(Model model) {
@@ -167,11 +176,13 @@ public class AdminPlantController {
         return "redirect:/admin/products";
     }
 
+
     @PostMapping("/{id}/delete")
-    public String deletePlant(@PathVariable Long id) {
-        plantService.deletePlant(id);
+    public String handleDeletePlant(@PathVariable Long id) {
+        plantService.deactivatePlant(id);
         return "redirect:/admin/products";
     }
+
 
     private String saveImage(MultipartFile imageFile) throws IOException {
         File uploadDirFile = new File(UPLOAD_DIR);

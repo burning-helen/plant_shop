@@ -34,4 +34,11 @@ public class GlobalModelAttributes {
     public Object subcategories() {
         return categoryService.findSubcategories();
     }
+
+    @ModelAttribute("user")
+    public Object user() {
+        return userService.getCurrentUser();
+    }
+
+
 }

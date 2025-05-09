@@ -3,6 +3,7 @@ package com.example.plant_shop.model;
 
 import jakarta.persistence.*;
 
+import java.util.Iterator;
 import java.util.List;
 
 @Entity
@@ -65,4 +66,31 @@ public class Cart {
     public void setTotalAmount(double totalAmount) {
         this.totalAmount = totalAmount;
     }
+
+    public void removeItem(Long itemId) {
+        Iterator<CartItem> iterator = this.getItems().iterator();
+        boolean removed = false;
+        while (iterator.hasNext()) {
+            CartItem item = iterator.next();
+            if (item.getId().equals(itemId)) {
+                iterator.remove();
+                removed = true;
+                break;
+            }
+        }
+        if (!removed) {
+            throw new IllegalArgumentException("Товар не найден в корзине");
+        }
+        calculateTotal();
+    }
+
+
+    private void calculateTotal() {
+        double total = this.getItems().stream()
+                .mapToDouble(item -> item.getPrice() * item.getQuantity())
+                .sum();
+        this.setTotalAmount(total);
+    }
+
+
 }
