@@ -12,6 +12,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
 
+/**
+ * Контроллер для управления профилем пользователя.
+ * <p>
+ * Этот контроллер предоставляет функциональность для отображения профиля пользователя,
+ * обновления личных данных, а также изменения пароля.
+ * </p>
+ */
 @Controller
 @RequestMapping("/profile")
 public class ProfileController {
@@ -25,6 +32,16 @@ public class ProfileController {
     @Autowired
     private UserRepository userRepository;
 
+    /**
+     * Отображает страницу профиля пользователя.
+     * <p>
+     * Этот метод используется для отображения информации о текущем пользователе.
+     * </p>
+     *
+     * @param model модель для передачи данных на страницу
+     * @param principal текущий аутентифицированный пользователь
+     * @return имя шаблона для отображения профиля пользователя
+     */
     @GetMapping
     public String profilePage(Model model, Principal principal) {
         User user = userService.findByUsername(principal.getName());
@@ -32,6 +49,18 @@ public class ProfileController {
         return "profile";
     }
 
+    /**
+     * Обновляет профиль пользователя.
+     * <p>
+     * Этот метод обновляет личные данные пользователя, такие как имя, фамилия, email, адрес доставки, телефон и возраст.
+     * После успешного обновления, пользователя перенаправляют на страницу профиля с сообщением об успехе.
+     * </p>
+     *
+     * @param updatedUser объект, содержащий обновленные данные пользователя
+     * @param principal текущий аутентифицированный пользователь
+     * @param redirectAttributes атрибуты для перенаправления с сообщением об успехе
+     * @return перенаправление на страницу профиля с сообщением об успехе
+     */
     @PostMapping("/update")
     public String updateProfile(@ModelAttribute User updatedUser, Principal principal, RedirectAttributes redirectAttributes) {
         User user = userService.findByUsername(principal.getName());
@@ -48,6 +77,20 @@ public class ProfileController {
         return "redirect:/profile";
     }
 
+    /**
+     * Изменяет пароль пользователя.
+     * <p>
+     * Этот метод позволяет пользователю изменить свой пароль. Для этого необходимо ввести старый пароль, новый пароль и подтверждение нового пароля.
+     * После успешной смены пароля пользователя перенаправляют на страницу профиля с сообщением об успехе.
+     * </p>
+     *
+     * @param oldPassword старый пароль пользователя
+     * @param newPassword новый пароль пользователя
+     * @param confirmPassword подтверждение нового пароля
+     * @param principal текущий аутентифицированный пользователь
+     * @param redirectAttributes атрибуты для перенаправления с сообщениями об ошибке или успехе
+     * @return перенаправление на страницу профиля с соответствующим сообщением
+     */
     @PostMapping("/change-password")
     public String changePassword(@RequestParam String oldPassword,
                                  @RequestParam String newPassword,
@@ -72,4 +115,3 @@ public class ProfileController {
         return "redirect:/profile";
     }
 }
-

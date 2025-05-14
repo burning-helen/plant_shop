@@ -10,11 +10,16 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
 import java.util.*;
 
+/**
+ * Сервис для работы с корзиной покупок.
+ * <p>
+ * Этот сервис управляет корзинами пользователей, позволяя добавлять, обновлять, удалять товары, а также сохранять данные в сессии или в базе данных для авторизованных пользователей.
+ * </p>
+ */
 @Service
 public class CartService {
 
@@ -27,10 +32,21 @@ public class CartService {
     @Autowired
     private UserService userService;
 
+    /**
+     * Получает текущую корзину пользователя.
+     * <p>
+     * Для авторизованных пользователей корзина хранится в базе данных, а для неавторизованных - в сессии.
+     * Если корзина не существует, она создается.
+     * </p>
+     *
+     * @param session текущая HTTP-сессия
+     * @param user    авторизованный пользователь
+     * @return текущая корзина
+     */
     @Transactional
     public Cart getCurrentCart(HttpSession session, User user) {
         if (user != null) {
-
+            // Для авторизованного пользователя
             Cart cart = cartRepository.findByUser(user)
                     .orElseGet(() -> {
                         Cart newCart = new Cart();
@@ -40,7 +56,7 @@ public class CartService {
                         return cartRepository.save(newCart);
                     });
 
-            // Синхронизируем корзину из сессии, если она есть
+            // Синхронизируем корзину из сессии
             Cart sessionCart = (Cart) session.getAttribute("cart");
             if (sessionCart != null && !sessionCart.getItems().isEmpty()) {
                 mergeSessionCartIntoDbCart(sessionCart, cart);
@@ -50,7 +66,7 @@ public class CartService {
 
             return cart;
         } else {
-            // Для неавторизованного пользователя используем сессию
+            // Для неавторизованного пользователя
             Cart cart = (Cart) session.getAttribute("cart");
             if (cart == null) {
                 cart = new Cart();
@@ -62,6 +78,15 @@ public class CartService {
         }
     }
 
+    /**
+     * Объединяет корзину из сессии с корзиной в базе данных для авторизованного пользователя.
+     * <p>
+     * Если в корзине из сессии есть товары, которых нет в базе данных, они добавляются в корзину пользователя.
+     * </p>
+     *
+     * @param sessionCart корзина из сессии
+     * @param dbCart     корзина пользователя в базе данных
+     */
     @Transactional
     public void mergeSessionCartIntoDbCart(Cart sessionCart, Cart dbCart) {
         for (CartItem sessionItem : sessionCart.getItems()) {
@@ -80,7 +105,6 @@ public class CartService {
                 newItem.setCart(dbCart);
                 newItem.setUser(userService.getCurrentUser());
                 dbCart.getItems().add(newItem);
-
             }
         }
 
@@ -91,6 +115,17 @@ public class CartService {
         dbCart.setTotalAmount(total);
     }
 
+    /**
+     * Добавляет товар в корзину пользователя.
+     * <p>
+     * Если товар уже существует в корзине, увеличивается его количество, иначе добавляется новый товар.
+     * </p>
+     *
+     * @param plant   добавляемый товар
+     * @param quantity количество товара
+     * @param session текущая HTTP-сессия
+     * @param user    авторизованный пользователь
+     */
     @Transactional
     public void addToCart(Plant plant, int quantity, HttpSession session, User user) {
         Cart cart = getCurrentCart(session, user);
@@ -124,6 +159,12 @@ public class CartService {
         }
     }
 
+    /**
+     * Получает общее количество товаров в корзине пользователя.
+     *
+     * @param session текущая HTTP-сессия
+     * @return общее количество товаров в корзине
+     */
     @Transactional
     public int getCartItemCount(HttpSession session) {
         Cart cart = getCurrentCart(session, userService.getCurrentUser());
@@ -132,17 +173,13 @@ public class CartService {
                 .sum();
     }
 
-    public void saveCart(Cart cart, HttpSession session, User user) {
-        cart.setUser(user);
-
-        for (CartItem item : cart.getItems()) {
-            item.setCart(cart);
-        }
-
-        cartRepository.save(cart);
-        session.setAttribute("cart", cart);
-    }
-
+    /**
+     * Обновляет количество товара в корзине сессии.
+     *
+     * @param plantId     ID товара
+     * @param newQuantity новое количество
+     * @param session     текущая HTTP-сессия
+     */
     @Transactional
     public void updateSessionCartItem(Long plantId, int newQuantity, HttpSession session) {
         Cart cart = getCurrentCart(session, null);
@@ -165,7 +202,15 @@ public class CartService {
         session.setAttribute("cart", cart);
     }
 
-
+    /**
+     * Обновляет количество товара в корзине пользователя и пересчитывает общую сумму.
+     * Если количество становится меньше или равно нулю, товар удаляется из корзины.
+     *
+     * @param itemId      ID товара в корзине
+     * @param newQuantity новое количество
+     * @param session     текущая HTTP-сессия
+     * @param user        авторизованный пользователь
+     */
     @Transactional
     public void updateItemQuantity(Long itemId, int newQuantity, HttpSession session, User user) {
         Cart cart = getCurrentCart(session, user);
@@ -198,6 +243,13 @@ public class CartService {
         }
     }
 
+    /**
+     * Удаляет товар из корзины пользователя.
+     *
+     * @param itemId ID товара, который нужно удалить
+     * @param session текущая HTTP-сессия
+     * @param user    авторизованный пользователь
+     */
     @Transactional
     public void removeItem(Long itemId, HttpSession session, User user) {
         Cart cart = getCurrentCart(session, user);
@@ -205,7 +257,6 @@ public class CartService {
         // Проверяем существование товара
         boolean removed = cart.getItems().removeIf(item -> {
             if (item.getId().equals(itemId)) {
-                // Дополнительные проверки, если нужно
                 return true;
             }
             return false;
@@ -225,12 +276,12 @@ public class CartService {
         cartRepository.save(cart);
     }
 
-    @Transactional
-    public void removeItemsFromCart(List<Long> itemIds, User user) {
-        List<CartItem> itemsToRemove = cartItemRepository.findByIdInAndUser(itemIds, user);
-        cartItemRepository.deleteAll(itemsToRemove);
-    }
-
+    /**
+     * Рассчитывает общую сумму для выбранных товаров.
+     *
+     * @param itemIds список ID выбранных товаров
+     * @return общая сумма для выбранных товаров
+     */
     public BigDecimal calculateTotal(List<Long> itemIds) {
         if (itemIds == null || itemIds.isEmpty()) {
             return BigDecimal.ZERO;
@@ -244,19 +295,22 @@ public class CartService {
                 continue;
             }
 
-            // Используем цену, либо 0, если цена не указана
-            double price = item.getPrice(); // Без null-проверки
+            // Используем цену товара
+            double price = item.getPrice();
             int quantity = item.getQuantity() > 0 ? item.getQuantity() : 0;
 
-            // Прибавляем к общей сумме
             total = total.add(BigDecimal.valueOf(price).multiply(BigDecimal.valueOf(quantity)));
         }
 
         return total;
     }
 
-
-
+    /**
+     * Получает список товаров по их ID.
+     *
+     * @param selectedItemIds список ID товаров
+     * @return список товаров
+     */
     public List<CartItem> getItemsByIds(List<Long> selectedItemIds) {
         return cartItemRepository.findAllById(selectedItemIds);
     }

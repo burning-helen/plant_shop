@@ -15,12 +15,31 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
+/**
+ * Конфигурация безопасности приложения.
+ * <p>
+ * Этот класс настраивает безопасность веб-приложения с использованием Spring Security. Он включает
+ * настройку защиты маршрутов, обработку аутентификации и настроек сессии. Для аутентификации используется
+ * форма входа с успешным редиректом через {@link CustomAuthenticationSuccessHandler}.
+ * </p>
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-
+    /**
+     * Метод для настройки цепочки фильтров безопасности.
+     * <p>
+     * В этом методе конфигурируются HTTP запросы, включая разрешение доступа к публичным страницам,
+     * настройку страниц входа/выхода, а также конфигурацию аутентификации.
+     * </p>
+     *
+     * @param http конфигурация безопасности HTTP запросов.
+     * @param customAuthenticationSuccessHandler обработчик успешной аутентификации.
+     * @return настроенная цепочка фильтров безопасности.
+     * @throws Exception если возникнет ошибка при конфигурации безопасности.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler) throws Exception {
@@ -45,15 +64,29 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Метод для создания {@link PasswordEncoder} для кодирования паролей.
+     * <p>
+     * В данном случае используется {@link BCryptPasswordEncoder} для безопасного кодирования паролей.
+     * </p>
+     *
+     * @return экземпляр {@link PasswordEncoder}.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-
-
-
-
+    /**
+     * Метод для создания экземпляра {@link CustomAuthenticationSuccessHandler}.
+     * <p>
+     * Этот обработчик используется для выполнения действий после успешной аутентификации пользователя.
+     * </p>
+     *
+     * @param userService сервис для работы с пользователями.
+     * @param cartService сервис для работы с корзинами.
+     * @return настроенный {@link CustomAuthenticationSuccessHandler}.
+     */
     @Bean
     public CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler(UserService userService,
                                                                                  CartService cartService) {

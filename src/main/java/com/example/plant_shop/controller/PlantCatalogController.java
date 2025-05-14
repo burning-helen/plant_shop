@@ -24,6 +24,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Контроллер для отображения каталога растений и управления фильтрацией, поиском и просмотром деталей растений.
+ * <p>
+ * Этот контроллер обрабатывает запросы для отображения списка растений, фильтрации по категориям и подкатегориям,
+ * а также поиска по названию и описанию растений. Также предоставляется возможность просмотра подробной информации о растении.
+ * </p>
+ */
 @Controller
 public class PlantCatalogController {
 
@@ -38,9 +45,24 @@ public class PlantCatalogController {
 
     @Autowired
     private UserService userService;
+
     @Autowired
     private CategoryRepository categoryRepository;
 
+    /**
+     * Отображает каталог растений с возможностью фильтрации по категориям, подкатегориям и поиску.
+     * <p>
+     * Пользователь может выбрать категорию, подкатегорию или выполнить поиск по названию или описанию растения.
+     * Также отображается информация о количестве товаров в корзине.
+     * </p>
+     *
+     * @param categoryName название категории для фильтрации
+     * @param subcategoryName название подкатегории для фильтрации
+     * @param search строка для поиска растений по имени или описанию
+     * @param model модель для передачи данных на страницу
+     * @param session текущая HTTP сессия
+     * @return имя шаблона для отображения каталога растений
+     */
     @GetMapping("/catalog")
     public String showCatalog(
             @RequestParam(required = false) String categoryName,
@@ -75,7 +97,6 @@ public class PlantCatalogController {
         model.addAttribute("plants", plants);
         model.addAttribute("categories", categoryService.findAllMainCategories());
 
-        // Загружаем подкатегории только для выбранной категории
         List<Category> subcategories = categoryName != null ?
                 categoryService.findSubcategoriesByParentName(categoryName) :
                 Collections.emptyList();
@@ -84,13 +105,32 @@ public class PlantCatalogController {
         return "catalog";
     }
 
+    /**
+     * Возвращает список подкатегорий для выбранной родительской категории.
+     * <p>
+     * Этот метод используется для динамической загрузки подкатегорий при выборе категории.
+     * </p>
+     *
+     * @param parent название родительской категории
+     * @return список подкатегорий для выбранной категории
+     */
     @GetMapping("/catalog/subcategories")
     @ResponseBody
     public List<Category> getSubcategories(@RequestParam String parent) {
         return categoryService.findSubcategoriesByParentName(parent);
     }
 
-    // Просмотр растений по категории
+    /**
+     * Отображает список растений для выбранной категории и подкатегории.
+     * <p>
+     * Этот метод используется для фильтрации растений по категории и подкатегории.
+     * </p>
+     *
+     * @param categoryName название категории
+     * @param subcategoryName название подкатегории
+     * @param model модель для передачи данных на страницу
+     * @return имя шаблона для отображения каталога с отфильтрованными растениями
+     */
     @GetMapping("/catalog/{category}/{subcategory}")
     public String showPlantsByCategoryAndSubcategory(
             @RequestParam(required = false) String categoryName,
@@ -100,16 +140,12 @@ public class PlantCatalogController {
         List<Plant> plants;
 
         if (categoryName != null && subcategoryName != null) {
-            // Поиск по обеим категориям
             plants = plantRepository.findActiveByParentAndSubcategory(categoryName, subcategoryName);
         } else if (categoryName != null) {
-            // Поиск только по категории
             plants = plantRepository.findActiveByParentCategory_Name(categoryName);
         } else if (subcategoryName != null) {
-            // Поиск только по подкатегории
             plants = plantRepository.findActiveBySubcategory_Name(subcategoryName);
         } else {
-            // Если ни категория, ни подкатегория не заданы, показать все растения
             plants = plantRepository.findAllActive();
         }
 
@@ -119,16 +155,34 @@ public class PlantCatalogController {
         return "catalog";
     }
 
-
-    // Поиск растений
+    /**
+     * Осуществляет поиск растений по запросу.
+     * <p>
+     * Этот метод позволяет пользователю искать растения по названию или описанию.
+     * </p>
+     *
+     * @param query строка запроса для поиска
+     * @param model модель для передачи данных на страницу
+     * @return имя шаблона для отображения каталога с результатами поиска
+     */
     @GetMapping("/catalog/search")
     public String searchPlants(@RequestParam String query, Model model) {
-        List<Plant> plants = plantRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(query);        model.addAttribute("plants", plants);
+        List<Plant> plants = plantRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(query);
+        model.addAttribute("plants", plants);
         model.addAttribute("searchQuery", query);
         return "catalog";
     }
 
-    // Детальная страница растения
+    /**
+     * Отображает подробную информацию о растении.
+     * <p>
+     * Этот метод отображает страницу с подробной информацией о выбранном растении.
+     * </p>
+     *
+     * @param id идентификатор растения
+     * @param model модель для передачи данных на страницу
+     * @return имя шаблона для отображения подробностей о растении
+     */
     @GetMapping("/catalog/plant/{id}")
     public String showPlantDetails(@PathVariable Long id, Model model) {
         Plant plant = plantRepository.findById(id)

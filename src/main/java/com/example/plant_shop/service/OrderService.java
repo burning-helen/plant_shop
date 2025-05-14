@@ -13,6 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Сервис для управления заказами.
+ * <p>
+ * Этот сервис предоставляет методы для оформления заказа, получения списка заказов пользователя и администрирования корзины.
+ * </p>
+ */
 @Service
 public class OrderService {
 
@@ -33,9 +39,23 @@ public class OrderService {
 
     @Autowired
     private CartService cartService;
+
     @Autowired
     private CartRepository cartRepository;
 
+    /**
+     * Оформление нового заказа.
+     * <p>
+     * Этот метод создаёт новый заказ на основе выбранных товаров из корзины и данных пользователя. После оформления заказа,
+     * обновляется количество товаров на складе и корзина. Если товар не доступен, он пропускается.
+     * </p>
+     *
+     * @param orderForm      данные формы для оформления заказа (адрес доставки, метод оплаты и т.д.)
+     * @param selectedItemIds список идентификаторов выбранных товаров из корзины
+     * @param session        сессия пользователя
+     * @param model          модель для передачи данных в представление
+     * @throws IllegalStateException если в корзине нет доступных товаров для заказа
+     */
     @Transactional
     public void placeOrder(OrderForm orderForm, List<Long> selectedItemIds, HttpSession session, Model model) {
         User user = userService.getCurrentUser();
@@ -112,10 +132,27 @@ public class OrderService {
 
     }
 
+    /**
+     * Получает все заказы пользователя.
+     * <p>
+     * Этот метод возвращает все заказы для указанного пользователя, включая их товары.
+     * </p>
+     *
+     * @param user пользователь, чьи заказы нужно получить
+     * @return список заказов пользователя
+     */
     public List<Order> getOrdersByUser(User user) {
         return orderRepository.findWithItemsByUser(user);
     }
 
+    /**
+     * Получает все заказы в системе.
+     * <p>
+     * Этот метод возвращает все заказы в системе, отсортированные по дате (от новых к старым).
+     * </p>
+     *
+     * @return список всех заказов
+     */
     public List<Order> getAllOrders() {
         return orderRepository.findAllByOrderByOrderDateDesc();
     }

@@ -294,10 +294,26 @@
                                     </td>
                                     <td class="item-total fw-bold"
                                         th:text="${#numbers.formatDecimal(item.quantity * item.price, 1, 2)} + ' ₽'"></td>
-                                    <td>
-                                        <button class="btn btn-danger delete-btn" th:attr="data-item-id=${item.id}">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
+                                    <td class="text-end">
+                                        <div th:if="${#authentication.principal != 'anonymousUser'}">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger delete-btn"
+                                                    th:attr="data-item-id=${item.id}"
+                                                    title="Удалить из корзины">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                        <div th:if="${#authentication.principal == 'anonymousUser'}"
+                                             class="tooltip-wrapper"
+                                             data-bs-toggle="tooltip"
+                                             data-bs-placement="top"
+                                             title="Войдите в систему, чтобы удалять товары">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary"
+                                                    disabled>
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 </tbody>
@@ -462,7 +478,7 @@
             input.dataset.prevValue = input.value;
         });
 
-        // Остальной код (чекбоксы, удаление и т.д.)
+
         const checkoutButton = document.getElementById('checkoutButton');
         const selectAllCheckbox = document.getElementById('selectAll');
         const checkboxes = document.querySelectorAll('.item-checkbox');
@@ -505,7 +521,81 @@
         }
 
         updateSelectedTotal();
+        function checkEmptyCart() {
+            const tableBody = document.querySelector('.cart-table tbody');
+            if (tableBody && tableBody.children.length === 0) {
+                window.location.reload(); // Перезагружаем страницу, если корзина пуста
+            }
+        }
+
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                if (!confirm('Вы уверены, что хотите удалить товар из корзины?')) {
+                    return;
+                }
+
+                const itemId = this.getAttribute('data-item-id');
+                const row = this.closest('tr'); // Получаем строку для удаления
+                const deleteForm = document.getElementById('deleteForm');
+                const csrfToken = deleteForm.querySelector('input[name="_csrf"]').value;
+
+                // Показываем индикатор загрузки
+                this.innerHTML = '<i class="bi bi-arrow-repeat"></i>';
+                this.disabled = true;
+
+                fetch('/cart/remove', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: `itemId=${itemId}&_csrf=${csrfToken}`
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Ошибка сервера');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            row.style.transition = 'opacity 0.3s';
+                            row.style.opacity = '0';
+                            setTimeout(() => {
+                                row.remove();
+                                checkEmptyCart();
+                                updateSelectedTotal();
+                            }, 300);
+
+                            // Обновляем общую сумму
+                            updateSelectedTotal();
+
+                            // Обновляем счетчик корзины в навигации
+                            const cartCount = document.getElementById('cart-count');
+                            if (cartCount) {
+                                const newCount = parseInt(cartCount.textContent) - 1;
+                                cartCount.textContent = newCount > 0 ? newCount : '0';
+                            }
+                        } else {
+                            throw new Error(data.message || 'Ошибка удаления');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        this.innerHTML = '<i class="bi bi-trash"></i>';
+                        this.disabled = false;
+                        alert('Ошибка при удалении товара: ' + error.message);
+                    });
+            });
+        });
+
     });
+    // Инициализация tooltip для кнопок удаления
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
 </script>
 <div th:replace="~{fragments/footer :: main-footer}"></div>
 </body>

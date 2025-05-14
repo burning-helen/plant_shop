@@ -23,7 +23,13 @@ import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
-
+/**
+ * Контроллер для управления корзиной покупок.
+ * <p>
+ * Этот контроллер предоставляет функциональность для добавления товаров в корзину, удаления товаров,
+ * обновления количества товаров и отображения содержимого корзины.
+ * </p>
+ */
 @Controller
 @RequestMapping("/cart")
 public class CartController {
@@ -37,13 +43,28 @@ public class CartController {
     @Autowired
     private UserService userService;
 
+    /**
+     * Отображает содержимое корзины покупок текущего пользователя.
+     *
+     * @param session текущая HTTP-сессия
+     * @param model   модель для передачи данных в шаблон
+     * @return имя шаблона для отображения корзины
+     */
     @GetMapping
     public String viewCart(HttpSession session, Model model) {
-        Cart cart = cartService.getCurrentCart(session, userService.getCurrentUser() );
+        Cart cart = cartService.getCurrentCart(session, userService.getCurrentUser());
         model.addAttribute("cart", cart);
         return "cart";
     }
 
+    /**
+     * Добавляет товар в корзину.
+     *
+     * @param plantId  ID растения, которое добавляется в корзину
+     * @param quantity количество добавляемого товара
+     * @param session  текущая HTTP-сессия
+     * @return ответ с информацией о добавлении товара в корзину
+     */
     @PostMapping(value = "/add", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, Object> addToCart(@RequestParam Long plantId,
@@ -64,7 +85,12 @@ public class CartController {
         return response;
     }
 
-
+    /**
+     * Получает количество товаров в корзине.
+     *
+     * @param session текущая HTTP-сессия
+     * @return количество товаров в корзине
+     */
     @GetMapping(value = "/count", produces = MediaType.TEXT_PLAIN_VALUE)
     @ResponseBody
     public String getCartItemCount(HttpSession session) {
@@ -73,6 +99,14 @@ public class CartController {
         return String.valueOf(count);
     }
 
+    /**
+     * Обновляет количество товара в корзине.
+     *
+     * @param itemId   ID товара в корзине
+     * @param quantity новое количество товара
+     * @param session  текущая HTTP-сессия
+     * @return ответ с информацией о статусе обновления корзины
+     */
     @PostMapping("/update")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> updateCartItem(
@@ -86,11 +120,9 @@ public class CartController {
             User currentUser = userService.getCurrentUser();
 
             if (itemId.startsWith("plant_")) {
-                // Обработка для неавторизованных пользователей
                 Long plantId = Long.parseLong(itemId.substring(6));
                 cartService.updateSessionCartItem(plantId, quantity, session);
             } else {
-                // Обработка для авторизованных пользователей
                 Long id = Long.parseLong(itemId);
                 cartService.updateItemQuantity(id, quantity, session, currentUser);
             }
@@ -106,6 +138,14 @@ public class CartController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Удаляет товар из корзины.
+     *
+     * @param itemId   ID товара, который удаляется из корзины
+     * @param session  текущая HTTP-сессия
+     * @param principal текущий аутентифицированный пользователь
+     * @return ответ с информацией о статусе удаления товара из корзины
+     */
     @PostMapping("/remove")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> removeItem(@RequestParam Long itemId, HttpSession session, Principal principal) {
@@ -117,12 +157,8 @@ public class CartController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
-        // здесь логика удаления
         cartService.removeItem(itemId, session, userService.getCurrentUser());
         response.put("success", true);
         return ResponseEntity.ok(response);
     }
-
-
-
 }

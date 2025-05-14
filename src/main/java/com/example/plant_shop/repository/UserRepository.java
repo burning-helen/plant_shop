@@ -5,8 +5,20 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
+/**
+ * Репозиторий для работы с объектами {@link User}.
+ * <p>
+ * Этот интерфейс предоставляет методы для выполнения стандартных операций CRUD с сущностями {@link User}.
+ * Он также включает метод для поиска пользователя по имени пользователя.
+ * </p>
+ */
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByUsername(String username);
 
-    void deleteByUsername(String username);
+    /**
+     * Находит пользователя по имени пользователя.
+     *
+     * @param username имя пользователя
+     * @return {@link Optional} с найденным пользователем, если он существует
+     */
+    Optional<User> findByUsername(String username);
 }
