@@ -74,11 +74,36 @@ public class CartController {
     }
 
     @PostMapping("/update")
-    public String updateCartItem(@RequestParam Long itemId,
-                                 @RequestParam int quantity,
-                                 HttpSession session) {
-        cartService.updateItemQuantity(itemId, quantity, session, userService.getCurrentUser());
-        return "redirect:/cart";
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> updateCartItem(
+            @RequestParam String itemId, // Может быть "plant_123" или обычный ID
+            @RequestParam int quantity,
+            HttpSession session) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            User currentUser = userService.getCurrentUser();
+
+            if (itemId.startsWith("plant_")) {
+                // Обработка для неавторизованных пользователей
+                Long plantId = Long.parseLong(itemId.substring(6));
+                cartService.updateSessionCartItem(plantId, quantity, session);
+            } else {
+                // Обработка для авторизованных пользователей
+                Long id = Long.parseLong(itemId);
+                cartService.updateItemQuantity(id, quantity, session, currentUser);
+            }
+
+            Cart cart = cartService.getCurrentCart(session, currentUser);
+            response.put("success", true);
+            response.put("totalAmount", cart.getTotalAmount());
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        }
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/remove")

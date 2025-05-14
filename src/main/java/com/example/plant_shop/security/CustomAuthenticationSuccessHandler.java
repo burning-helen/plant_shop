@@ -29,10 +29,8 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         HttpSession session = request.getSession();
         User user = userService.getCurrentUser();
 
-        // Создание или загрузка корзины
         cartService.getCurrentCart(session, user);
 
-        // Перенаправление
         response.sendRedirect("/catalog");
     }
 }

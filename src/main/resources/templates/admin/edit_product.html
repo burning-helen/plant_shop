@@ -105,6 +105,15 @@
         .action-buttons {
             margin-top: 2rem;
         }
+
+        footer a:hover {
+            color: var(--secondary-color) !important;
+            text-decoration: underline !important;
+        }
+
+        footer hr {
+            opacity: 0.1;
+        }
     </style>
 </head>
 <body>
@@ -233,13 +242,18 @@
             </div>
 
             <div class="mb-4">
-                <label class="form-label">Изображение</label>
-                <input type="file" class="form-control" name="imageFile">
-                <div th:if="${plant.imageUrl}" class="mt-2">
-                    <img th:src="@{${plant.imageUrl}}" class="image-preview">
-                    <div class="form-text text-muted">Текущее изображение</div>
+                <h5 class="mb-3"><i class="bi bi-image me-2"></i>Изображение</h5>
+                <div class="mb-3">
+                    <div th:if="${plant.imageUrl}" class="mt-2">
+                        <img th:src="@{${plant.imageUrl}}" class="image-preview">
+                        <div class="form-text text-muted">Текущее изображение</div>
+                    </div>
+                    <label for="imageFile" class="form-label">Загрузить изображение</label>
+                    <input type="file" id="imageFile" name="imageFile" class="form-control" accept="image/png, image/jpeg, image/webp">
+                    <div class="form-text">Рекомендуемый формат: JPEG или PNG, минимальный размер 500x500px</div>
                 </div>
             </div>
+
 
             <div class="action-buttons d-flex justify-content-end">
                 <button type="submit" class="btn btn-success px-4 me-2">

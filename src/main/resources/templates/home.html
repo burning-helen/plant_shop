@@ -107,6 +107,38 @@
     .featured-section a {
       margin-top: 1rem;
     }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    main {
+      flex: 1 0 auto;
+      padding-bottom: 20px; /* Буфер перед футером */
+    }
+
+    footer {
+      flex-shrink: 0;
+      background-color: #212529 !important;
+      width: 100%;
+    }
+
+    footer a:hover {
+      color: var(--secondary-color) !important;
+      text-decoration: underline !important;
+    }
+
+    footer hr {
+      opacity: 0.1;
+    }
   </style>
 </head>
 <body>

@@ -79,7 +79,7 @@ public class OrderController {
             return "redirect:/cart";
         }
         orderService.placeOrder(orderForm, selectedItemIds, session, model);
-        model.addAttribute("thankYou", true); // показать блок благодарности
+        model.addAttribute("thankYou", true);
         return "checkout";
 
 

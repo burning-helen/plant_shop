@@ -143,22 +143,45 @@ public class CartService {
         session.setAttribute("cart", cart);
     }
 
+    @Transactional
+    public void updateSessionCartItem(Long plantId, int newQuantity, HttpSession session) {
+        Cart cart = getCurrentCart(session, null);
+
+        // Находим элемент корзины по plantId
+        for (CartItem item : cart.getItems()) {
+            if (item.getPlant().getId().equals(plantId)) {
+                item.setQuantity(newQuantity);
+                break;
+            }
+        }
+
+        // Пересчет общей суммы
+        double total = cart.getItems().stream()
+                .mapToDouble(i -> i.getPrice() * i.getQuantity())
+                .sum();
+        cart.setTotalAmount(total);
+
+        // Обновляем корзину в сессии
+        session.setAttribute("cart", cart);
+    }
+
 
     @Transactional
     public void updateItemQuantity(Long itemId, int newQuantity, HttpSession session, User user) {
         Cart cart = getCurrentCart(session, user);
 
-        for (CartItem item : cart.getItems()) {
-            if (item.getId().equals(itemId)) {
-                if (newQuantity <= 0) {
-                    cart.getItems().remove(item);
-                    cartItemRepository.delete(item); // Явное удаление
-                } else {
-                    // Убедимся, что новое количество не превышает stock
-                    int maxAllowed = item.getPlant().getStockQuantity();
-                    item.setQuantity(Math.min(newQuantity, maxAllowed));
-                }
-                break;
+        Optional<CartItem> itemOpt = cart.getItems().stream()
+                .filter(item -> item.getId().equals(itemId))
+                .findFirst();
+
+        if (itemOpt.isPresent()) {
+            CartItem item = itemOpt.get();
+            if (newQuantity <= 0) {
+                cart.getItems().remove(item);
+                cartItemRepository.delete(item);
+            } else {
+                int maxAllowed = item.getPlant().getStockQuantity();
+                item.setQuantity(Math.min(newQuantity, maxAllowed));
             }
         }
 
@@ -238,4 +261,3 @@ public class CartService {
         return cartItemRepository.findAllById(selectedItemIds);
     }
 }
-

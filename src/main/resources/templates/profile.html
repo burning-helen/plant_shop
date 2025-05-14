@@ -20,6 +20,22 @@
             color: var(--dark-text);
         }
 
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+
+        footer {
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+
         .navbar {
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             background-color: white !important;
@@ -86,6 +102,14 @@
 
         .alert {
             border-radius: 4px;
+        }
+        footer a:hover {
+            color: var(--secondary-color) !important;
+            text-decoration: underline !important;
+        }
+
+        footer hr {
+            opacity: 0.1;
         }
     </style>
 </head>

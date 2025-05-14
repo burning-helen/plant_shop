@@ -168,6 +168,31 @@
             background-color: #6c757d;
             border-color: #6c757d;
         }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+        }
+
+        .quantity-control .btn {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border-radius: 4px;
+        }
+
+        .quantity-input {
+            width: 50px;
+            text-align: center;
+            margin: 0 5px;
+        }
+
+        .item-total {
+            color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
@@ -241,66 +266,39 @@
                                 </thead>
                                 <tbody>
                                 <tr th:each="item : ${cart.items}">
+                                    <td><input type="checkbox" class="item-checkbox" name="selectedItemIds" th:value="${item.id}" checked></td>
                                     <td>
-                                        <input type="checkbox" name="selectedItemIds" class="item-checkbox"
-                                               th:value="${item.id}"
-                                               th:disabled="${!item.plant.active}">
-                                    </td>
-                                    <td>
-                                        <span th:if="${!item.plant.active}" class="text-muted"
-                                              th:text="${item.plant.name + ' (неактивно)'}"></span>
-                                        <a th:if="${item.plant.active}"
-                                           th:href="@{/catalog/plant/{id}(id=${item.plant.id})}"
-                                           class="product-link"
+                                        <a th:href="@{/catalog/plant/{id}(id=${item.plant.id})}"
+                                           class="product-link fw-bold"
                                            th:text="${item.plant.name}"></a>
                                     </td>
                                     <td th:text="${#numbers.formatDecimal(item.price, 1, 2)} + ' ₽'"></td>
                                     <td>
-                                        <div class="quantity-container">
-                                            <div th:if="${item.plant.active}">
-                                                <form th:action="@{/cart/update}" method="post" class="quantity-form">
-                                                    <input type="hidden" name="itemId" th:value="${item.id}"/>
-                                                    <button type="button" class="btn btn-sm quantity-btn quantity-decrease"
-                                                            th:disabled="${item.quantity <= 1}">
-                                                        <i class="bi bi-dash"></i>
-                                                    </button>
-                                                    <input type="number" name="quantity"
-                                                           th:value="${item.quantity}"
-                                                           min="1"
-                                                           th:max="${item.plant.stockQuantity}"
-                                                           class="form-control quantity-input">
-                                                    <button type="button" class="btn btn-sm quantity-btn quantity-increase"
-                                                            th:disabled="${item.quantity >= item.plant.stockQuantity}">
-                                                        <i class="bi bi-plus"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                            <span th:if="${!item.plant.active}" class="text-muted">Недоступно</span>
-                                        </div>
-                                    </td>
-                                    <td th:text="${#numbers.formatDecimal(item.quantity * item.price, 1, 2)} + ' ₽'"></td>
-                                    <td class="text-end">
-                                        <div th:if="${#authentication.principal != 'anonymousUser'}">
-                                            <button type="button"
-                                                    class="btn btn-sm btn-outline-danger delete-btn"
-                                                    th:attr="data-item-id=${item.id}"
-                                                    title="Удалить из корзины">
-                                                <i class="bi bi-trash"></i>
+                                        <div class="quantity-control">
+                                            <button class="btn btn-outline-secondary quantity-decrease px-2 py-0"
+                                                    th:disabled="${item.quantity <= 1}">
+                                                -
                                             </button>
-                                        </div>
-                                        <div th:if="${#authentication.principal == 'anonymousUser'}"
-                                             class="tooltip-wrapper"
-                                             data-bs-toggle="tooltip"
-                                             data-bs-placement="top"
-                                             title="Войдите в систему, чтобы удалять товары">
-                                            <button type="button"
-                                                    class="btn btn-sm btn-outline-secondary"
-                                                    disabled>
-                                                <i class="bi bi-trash"></i>
+                                            <input type="number"
+                                                   class="form-control quantity-input mx-2 text-center"
+                                                   th:value="${item.quantity}"
+                                                   min="1"
+                                                   th:max="${item.plant.stockQuantity}"
+                                                   th:attr="data-item-id=${item.id ?: 'plant_' + item.plant.id}"
+                                                   style="width: 60px;">
+                                            <button class="btn btn-outline-secondary quantity-increase px-2 py-0"
+                                                    th:disabled="${item.quantity >= item.plant.stockQuantity}">
+                                                +
                                             </button>
                                         </div>
                                     </td>
-
+                                    <td class="item-total fw-bold"
+                                        th:text="${#numbers.formatDecimal(item.quantity * item.price, 1, 2)} + ' ₽'"></td>
+                                    <td>
+                                        <button class="btn btn-danger delete-btn" th:attr="data-item-id=${item.id}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -339,159 +337,174 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const checkoutButton = document.getElementById('checkoutButton');
-        const selectAllCheckbox = document.getElementById('selectAll');
-        const checkboxes = document.querySelectorAll('.item-checkbox');
-        const totalSpan = document.getElementById('selectedTotal');
+        const csrfToken = document.querySelector('input[name="_csrf"]').value;
 
-        // Функция для форматирования суммы
-        function formatCurrency(amount) {
-            return amount.toFixed(2) + ' ₽';
-        }
+        // Функция для обновления количества через AJAX
+        async function updateQuantity(itemId, newQuantity, inputElement) {
+            const row = inputElement.closest('tr');
+            const priceText = row.querySelector('td:nth-child(3)').textContent; // 3-я ячейка - цена
 
-        // Функция для вычисления общей суммы выбранных товаров
-        function updateSelectedTotal() {
-            let total = 0;
-            checkboxes.forEach(checkbox => {
-                if (checkbox.checked && !checkbox.disabled) {
-                    const row = checkbox.closest('tr');
-                    const price = parseFloat(row.querySelector('td:nth-child(3)').textContent);
-                    const quantity = parseInt(row.querySelector('.quantity-input').value);
-                    total += price * quantity;
-                }
-            });
-            totalSpan.textContent = formatCurrency(total);
-            checkoutButton.disabled = total === 0;
-        }
+            const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.'));
 
-        // Обновление состояния кнопки и суммы при изменении чекбоксов
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', updateSelectedTotal);
-        });
-
-        // Обработка "Выбрать все"
-        selectAllCheckbox.addEventListener('change', function() {
-            checkboxes.forEach(checkbox => {
-                if (!checkbox.disabled) {
-                    checkbox.checked = this.checked;
-                }
-            });
-            updateSelectedTotal();
-        });
-
-        // Инициализация
-        updateSelectedTotal();
-
-
-
-        // Обработка изменения количества
-        document.querySelectorAll('.quantity-decrease').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const form = this.closest('.quantity-form');
-                const input = form.querySelector('input[name="quantity"]');
-                if (parseInt(input.value) > parseInt(input.min)) {
-                    input.value = parseInt(input.value) - 1;
-                    form.submit();
-                }
-            });
-        });
-
-        document.querySelectorAll('.quantity-increase').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const form = this.closest('.quantity-form');
-                const input = form.querySelector('input[name="quantity"]');
-                if (parseInt(input.value) < parseInt(input.max)) {
-                    input.value = parseInt(input.value) + 1;
-                    form.submit();
-                }
-            });
-        });
-
-        document.querySelectorAll('.quantity-input').forEach(input => {
-            input.addEventListener('change', function() {
-                const form = this.closest('.quantity-form');
-                if (this.value >= this.min && this.value <= this.max) {
-                    form.submit();
-                } else {
-                    this.value = this.value > this.max ? this.max : this.min;
-                    form.submit();
-                }
-            });
-        });
-
-        function checkEmptyCart() {
-            const tableBody = document.querySelector('.cart-table tbody');
-            if (tableBody && tableBody.children.length === 0) {
-                window.location.reload(); // Перезагружаем страницу, если корзина пуста
-            }
-        }
-
-        document.querySelectorAll('.delete-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                if (!confirm('Вы уверены, что хотите удалить товар из корзины?')) {
-                    return;
-                }
-
-                const itemId = this.getAttribute('data-item-id');
-                const row = this.closest('tr'); // Получаем строку для удаления
-                const deleteForm = document.getElementById('deleteForm');
-                const csrfToken = deleteForm.querySelector('input[name="_csrf"]').value;
-
-                // Показываем индикатор загрузки
-                this.innerHTML = '<i class="bi bi-arrow-repeat"></i>';
-                this.disabled = true;
-
-                fetch('/cart/remove', {
+            try {
+                const response = await fetch('/cart/update', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: `itemId=${itemId}&_csrf=${csrfToken}`
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Ошибка сервера');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.success) {
-                            row.style.transition = 'opacity 0.3s';
-                            row.style.opacity = '0';
-                            setTimeout(() => {
-                                row.remove();
-                                checkEmptyCart();
-                                updateSelectedTotal();
-                            }, 300);
+                    body: `itemId=${encodeURIComponent(itemId)}&quantity=${newQuantity}&_csrf=${csrfToken}`                });
 
-                            // Обновляем общую сумму
-                            updateSelectedTotal();
+                const result = await response.json();
 
-                            // Обновляем счетчик корзины в навигации
-                            const cartCount = document.getElementById('cart-count');
-                            if (cartCount) {
-                                const newCount = parseInt(cartCount.textContent) - 1;
-                                cartCount.textContent = newCount > 0 ? newCount : '0';
-                            }
-                        } else {
-                            throw new Error(data.message || 'Ошибка удаления');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        this.innerHTML = '<i class="bi bi-trash"></i>';
-                        this.disabled = false;
-                        alert('Ошибка при удалении товара: ' + error.message);
-                    });
+                if (result.success) {
+                    // Обновляем сумму в строке
+                    const totalCell = row.querySelector('.item-total');
+                    if (totalCell) {
+                        totalCell.textContent = (price * newQuantity).toFixed(2) + ' ₽';
+                    }
+
+                    // Обновляем счетчик в шапке
+                    const cartCount = document.getElementById('cart-count');
+                    if (cartCount) {
+                        fetch('/cart/count')
+                            .then(r => r.text())
+                            .then(count => cartCount.textContent = count);
+                    }
+
+                    return true;
+                } else {
+                    throw new Error(result.message || 'Ошибка обновления');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                return false;
+            }
+        }
+
+        document.querySelectorAll('.quantity-decrease').forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const control = this.closest('tr').querySelector('.quantity-control');
+                const input = control.querySelector('.quantity-input');
+
+                let newValue = parseInt(input.value) - 1;
+                newValue = Math.max(parseInt(input.min), newValue);
+
+                const success = await updateQuantity(
+                    encodeURIComponent(input.dataset.itemId),
+                    newValue,
+                    input
+                );
+
+                if (success) {
+                    input.value = newValue;
+                    // Обновляем состояние кнопок
+                    this.disabled = newValue <= parseInt(input.min);
+                    control.querySelector('.quantity-increase').disabled =
+                        newValue >= parseInt(input.max);
+                }
             });
         });
 
-    });
-    // Инициализация tooltip для кнопок удаления
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+        document.querySelectorAll('.quantity-increase').forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const control = this.closest('tr').querySelector('.quantity-control');
+                const input = control.querySelector('.quantity-input');
+
+                let newValue = parseInt(input.value) + 1;
+                newValue = Math.min(parseInt(input.max), newValue);
+
+                const success = await updateQuantity(
+                    encodeURIComponent(input.dataset.itemId),
+                    newValue,
+                    input
+                );
+
+                if (success) {
+                    input.value = newValue;
+                    // Обновляем состояние кнопок
+                    this.disabled = newValue >= parseInt(input.max);
+                    control.querySelector('.quantity-decrease').disabled =
+                        newValue <= parseInt(input.min);
+                }
+            });
+        });
+
+        // Обработчик ручного ввода
+        document.querySelectorAll('.quantity-input').forEach(input => {
+            input.addEventListener('change', async function() {
+                let newValue = parseInt(this.value);
+                if (isNaN(newValue)) {
+                    newValue = parseInt(this.min);
+                }
+                newValue = Math.max(parseInt(this.min), Math.min(parseInt(this.max), newValue));
+
+                const success = await updateQuantity(
+                    encodeURIComponent(this.dataset.itemId),
+                    newValue,
+                    this
+                );
+
+                if (success) {
+                    this.value = newValue;
+                    // Обновляем состояние кнопок
+                    const control = this.closest('.quantity-control');
+                    control.querySelector('.quantity-decrease').disabled = newValue <= parseInt(this.min);
+                    control.querySelector('.quantity-increase').disabled = newValue >= parseInt(this.max);
+                } else {
+                    this.value = this.dataset.prevValue || this.min;
+                }
+            });
+
+            // Сохраняем начальное значение
+            input.dataset.prevValue = input.value;
+        });
+
+        // Остальной код (чекбоксы, удаление и т.д.)
+        const checkoutButton = document.getElementById('checkoutButton');
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.item-checkbox');
+        const totalSpan = document.getElementById('selectedTotal');
+
+        function formatCurrency(amount) {
+            return amount.toFixed(2) + ' ₽';
+        }
+
+        function updateSelectedTotal() {
+            let total = 0;
+            document.querySelectorAll('.item-checkbox').forEach(checkbox => {
+                if (checkbox.checked && !checkbox.disabled) {
+                    const row = checkbox.closest('tr');
+                    const priceText = row.querySelector('td:nth-child(3)').textContent;
+                    const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.'));
+                    const quantity = parseInt(row.querySelector('.quantity-input').value);
+                    total += price * quantity;
+                }
+            });
+            document.getElementById('selectedTotal').textContent = total.toFixed(2) + ' ₽';
+            if (checkoutButton) {
+                checkoutButton.disabled = total === 0;
+            }
+        }
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectedTotal);
+        });
+
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                checkboxes.forEach(checkbox => {
+                    if (!checkbox.disabled) {
+                        checkbox.checked = this.checked;
+                    }
+                });
+                updateSelectedTotal();
+            });
+        }
+
+        updateSelectedTotal();
     });
 </script>
 <div th:replace="~{fragments/footer :: main-footer}"></div>

@@ -34,26 +34,21 @@ public class RegistrationController {
     @PostMapping("/register")
     public String registerUser(
             @Valid @ModelAttribute("user_for_reg") User user,
-            BindingResult bindingResult,
-            Model model) {
+            BindingResult bindingResult) {
 
-        // 1) Если другие поля не прошли валидацию — сразу обратно на форму
         if (bindingResult.hasErrors()) {
             return "register";
         }
 
-        // 2) Проверяем уникальность username
         if (userService.usernameExists(user.getUsername())) {
-            // связываем ошибку с полем username
             bindingResult.rejectValue(
-                    "username",               // поле у User
-                    "username.exists",        // код ошибки
+                    "username",
+                    "username.exists",
                     "Пользователь с таким логином уже существует"
             );
             return "register";
         }
 
-        // 3) Всё хорошо — сохраняем
         user.setDeliveryAddress("Адрес по умолчанию");
         user.setRole(Set.of("ROLE_USER"));
         userService.registerUser(user);
